@@ -45,11 +45,14 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
 
       String csvString = csv.encode(csvData);
 
-      // Save to file
-      final directory = await getTemporaryDirectory();
-      final path = "${directory.path}/family_budget_export_${DateTime.now().millisecondsSinceEpoch}.csv";
+      // Save to persistent storage
+      final directory = await getApplicationDocumentsDirectory();
+      final fileName = "family_budget_export_${DateTime.now().millisecondsSinceEpoch}.csv";
+      final path = "${directory.path}/$fileName";
       final file = File(path);
       await file.writeAsString(csvString);
+
+      _showSnackBar("Export saved locally: $fileName", SashTheme.accent);
 
       // Share
       await Share.shareXFiles([XFile(path)], text: 'My Family Budget SASH Export');
@@ -63,7 +66,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   Future<void> _importData() async {
     setState(() => _isImporting = true);
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv'],
       );
