@@ -3,6 +3,7 @@ import '../theme/app_theme.dart';
 import '../widgets/glass_card.dart';
 import 'categories_screen.dart';
 import 'family_setup_screen.dart';
+import 'data_management_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -38,7 +39,12 @@ class SettingsScreen extends StatelessWidget {
               
               const SizedBox(height: 24),
               _buildSettingsSection("Data & Security"),
-              _buildSettingsItem("Export Data", "Download your transactions as CSV", Icons.download_outlined),
+              _buildSettingsItem(
+                "Export/Import Data", 
+                "Backup or restore your transactions", 
+                Icons.import_export_outlined,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const DataManagementScreen())),
+              ),
               _buildSettingsItem("Privacy Policy", "How we handle your data", Icons.security_outlined),
               
               const SizedBox(height: 40),

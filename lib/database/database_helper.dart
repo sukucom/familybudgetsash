@@ -201,12 +201,33 @@ class DatabaseHelper {
   Future<List<Map<String, dynamic>>> getRecentTransactions({int limit = 10}) async {
     final db = await instance.database;
     return await db.rawQuery('''
-      SELECT t.*, c.name as category_name, c.icon as category_icon 
+      SELECT t.*, c.name as category_name, c.icon as category_icon, a.name as account_name
       FROM transactions t 
       JOIN categories c ON t.category_id = c.id 
+      JOIN accounts a ON t.account_id = a.id
       ORDER BY t.date DESC 
       LIMIT $limit
     ''');
+  }
+
+  Future<List<Map<String, dynamic>>> getAllTransactionsDetailed() async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT t.amount, t.date, t.type, t.note, c.name as category, a.name as account
+      FROM transactions t 
+      JOIN categories c ON t.category_id = c.id 
+      JOIN accounts a ON t.account_id = a.id
+      ORDER BY t.date DESC
+    ''');
+  }
+
+  Future<void> insertTransactionsBatch(List<Map<String, dynamic>> transactions) async {
+    final db = await instance.database;
+    final batch = db.batch();
+    for (var tx in transactions) {
+      batch.insert('transactions', tx);
+    }
+    await batch.commit(noResult: true);
   }
 
   Future<List<Map<String, dynamic>>> getCategorySpending({String? timeframe}) async {
