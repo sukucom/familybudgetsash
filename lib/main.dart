@@ -22,7 +22,7 @@ class FamilyBudgetSASH extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Family Budget SASH',
+      title: 'SASH Budget',
       debugShowCheckedModeBanner: false,
       theme: SashTheme.lightTheme,
       darkTheme: SashTheme.darkTheme,
