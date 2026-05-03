@@ -5,7 +5,8 @@ import '../database/database_helper.dart';
 import '../widgets/glass_card.dart';
 
 class ReportsScreen extends StatefulWidget {
-  const ReportsScreen({super.key});
+  final int refreshTrigger;
+  const ReportsScreen({super.key, this.refreshTrigger = 0});
 
   @override
   State<ReportsScreen> createState() => _ReportsScreenState();
@@ -20,6 +21,14 @@ class _ReportsScreenState extends State<ReportsScreen> {
   void initState() {
     super.initState();
     _loadReportData();
+  }
+
+  @override
+  void didUpdateWidget(ReportsScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshTrigger != widget.refreshTrigger) {
+      _loadReportData();
+    }
   }
 
   Future<void> _loadReportData() async {

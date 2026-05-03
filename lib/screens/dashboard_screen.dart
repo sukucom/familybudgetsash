@@ -4,7 +4,8 @@ import '../theme/app_theme.dart';
 import '../database/database_helper.dart';
 
 class DashboardScreen extends StatefulWidget {
-  const DashboardScreen({super.key});
+  final int refreshTrigger;
+  const DashboardScreen({super.key, this.refreshTrigger = 0});
 
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
@@ -20,6 +21,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
   void initState() {
     super.initState();
     _refreshData();
+  }
+
+  @override
+  void didUpdateWidget(DashboardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.refreshTrigger != widget.refreshTrigger) {
+      _refreshData();
+    }
   }
 
   Future<void> _refreshData() async {

@@ -16,19 +16,26 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String _amount = "0";
   bool _isDebit = true;
   CategoryModel? _selectedCategory;
+  Map<String, dynamic>? _selectedAccount;
   List<CategoryModel> _categories = [];
+  List<Map<String, dynamic>> _accounts = [];
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    _loadInitialData();
   }
 
-  Future<void> _loadCategories() async {
-    final categories = await DatabaseHelper.instance.getCategories();
+  Future<void> _loadInitialData() async {
+    final db = DatabaseHelper.instance;
+    final categories = await db.getCategories();
+    final accounts = await db.getAccounts();
+    
     setState(() {
       _categories = categories;
+      _accounts = accounts;
+      if (accounts.isNotEmpty) _selectedAccount = accounts.first;
       _selectedCategory = categories.firstWhere((c) => c.type == (_isDebit ? 'Expense' : 'Income'), orElse: () => categories.first);
       _isLoading = false;
     });
@@ -58,11 +65,10 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     if (_amount == "0") return;
 
     final db = DatabaseHelper.instance;
-    final accounts = await db.getAccounts();
-    if (accounts.isEmpty) return;
+    if (_selectedAccount == null) return;
 
     final transaction = TransactionModel(
-      accountId: accounts.first['id'], // Default to first account
+      accountId: _selectedAccount!['id'],
       memberId: 1, // Default to first member
       categoryId: _selectedCategory?.id ?? 1,
       amount: double.parse(_amount),
@@ -101,9 +107,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         children: [
           const Spacer(),
           _buildAmountDisplay(),
-          const SizedBox(height: 40),
+          const SizedBox(height: 24),
+          _buildAccountSelector(),
+          const SizedBox(height: 24),
           _buildTypeToggle(),
-          const SizedBox(height: 32),
+          const SizedBox(height: 24),
           _buildCategoryChips(),
           const SizedBox(height: 32),
           SashKeypad(
@@ -207,6 +215,47 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         )).toList(),
+      ),
+    );
+  }
+
+  Widget _buildAccountSelector() {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: _accounts.map((acc) {
+          final isSelected = _selectedAccount?['id'] == acc['id'];
+          return GestureDetector(
+            onTap: () => setState(() => _selectedAccount = acc),
+            child: Container(
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: isSelected ? SashTheme.primary : Colors.white10,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isSelected ? SashTheme.primary : Colors.white24),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    acc['type'] == 'Wallet' ? Icons.payments : Icons.account_balance,
+                    size: 16,
+                    color: isSelected ? Colors.white : Colors.white60,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    acc['name'],
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.white60,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
       ),
     );
   }

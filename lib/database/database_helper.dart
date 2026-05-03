@@ -128,6 +128,16 @@ class DatabaseHelper {
     return result.map((json) => CategoryModel.fromMap(json)).toList();
   }
 
+  Future<int> insertCategory(CategoryModel category) async {
+    final db = await instance.database;
+    return await db.insert('categories', category.toMap());
+  }
+
+  Future<int> deleteCategory(int id) async {
+    final db = await instance.database;
+    return await db.delete('categories', where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<List<Map<String, dynamic>>> getAccounts() async {
     final db = await instance.database;
     return await db.query('accounts');

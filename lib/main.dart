@@ -4,6 +4,7 @@ import 'screens/dashboard_screen.dart';
 import 'screens/add_transaction_screen.dart';
 import 'screens/reports_screen.dart';
 import 'screens/accounts_screen.dart';
+import 'screens/settings_screen.dart';
 import 'database/database_helper.dart';
 
 void main() async {
@@ -40,14 +41,15 @@ class MainNavigation extends StatefulWidget {
 
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
+  int _refreshCount = 0;
 
   @override
   Widget build(BuildContext context) {
     final List<Widget> screens = [
-      const DashboardScreen(),
-      const ReportsScreen(),
+      DashboardScreen(refreshTrigger: _refreshCount),
+      ReportsScreen(refreshTrigger: _refreshCount),
       const AccountsScreen(),
-      const Center(child: Text("Settings")),
+      const SettingsScreen(),
     ];
 
     return Scaffold(
@@ -80,8 +82,10 @@ class _MainNavigationState extends State<MainNavigation> {
           );
           
           if (result == true) {
-            // Trigger rebuild of the whole navigation, which forces screens to rebuild
-            setState(() {});
+            // Trigger rebuild of the whole navigation and increment refresh count
+            setState(() {
+              _refreshCount++;
+            });
           }
         },
         child: const Icon(Icons.add, size: 32),
