@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class SashTheme {
   // Brand Colors
@@ -18,29 +19,31 @@ class SashTheme {
       brightness: Brightness.dark,
       primaryColor: primary,
       scaffoldBackgroundColor: backgroundDark,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surfaceDark,
         elevation: 0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          fontFamily: 'Outfit',
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: Colors.white,
+      textTheme: GoogleFonts.outfitTextTheme(
+        const TextTheme(
+          displayLarge: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Colors.white,
+          ),
+          headlineMedium: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Colors.white70,
+          ),
+          bodyLarge: TextStyle(
+            fontSize: 16,
+            color: Colors.white,
+          ),
         ),
-        headlineMedium: TextStyle(
-          fontFamily: 'Outfit',
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Colors.white70,
-        ),
-        bodyLarge: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 16,
-          color: Colors.white,
-        ),
+      ).copyWith(
+        bodyLarge: GoogleFonts.inter(textStyle: const TextStyle(fontSize: 16, color: Colors.white)),
+        bodyMedium: GoogleFonts.inter(textStyle: const TextStyle(fontSize: 14, color: Colors.white70)),
       ),
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: primary,
@@ -55,30 +58,32 @@ class SashTheme {
       brightness: Brightness.light,
       primaryColor: primary,
       scaffoldBackgroundColor: backgroundLight,
-      cardTheme: CardTheme(
+      cardTheme: CardThemeData(
         color: surfaceLight,
         elevation: 4,
         shadowColor: Colors.black.withOpacity(0.05),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
       ),
-      textTheme: const TextTheme(
-        displayLarge: TextStyle(
-          fontFamily: 'Outfit',
-          fontSize: 32,
-          fontWeight: FontWeight.bold,
-          color: Color(0xFF0F172A),
+      textTheme: GoogleFonts.outfitTextTheme(
+        const TextTheme(
+          displayLarge: TextStyle(
+            fontSize: 32,
+            fontWeight: FontWeight.bold,
+            color: Color(0xFF0F172A),
+          ),
+          headlineMedium: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF475569),
+          ),
+          bodyLarge: TextStyle(
+            fontSize: 16,
+            color: Color(0xFF1E293B),
+          ),
         ),
-        headlineMedium: TextStyle(
-          fontFamily: 'Outfit',
-          fontSize: 20,
-          fontWeight: FontWeight.w600,
-          color: Color(0xFF475569),
-        ),
-        bodyLarge: TextStyle(
-          fontFamily: 'Inter',
-          fontSize: 16,
-          color: Color(0xFF1E293B),
-        ),
+      ).copyWith(
+        bodyLarge: GoogleFonts.inter(textStyle: const TextStyle(fontSize: 16, color: Color(0xFF1E293B))),
+        bodyMedium: GoogleFonts.inter(textStyle: const TextStyle(fontSize: 14, color: Color(0xFF475569))),
       ),
     );
   }
