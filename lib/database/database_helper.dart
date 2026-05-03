@@ -198,6 +198,60 @@ class DatabaseHelper {
     return await db.insert('transactions', row);
   }
 
+  Future<void> updateTransaction(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    final int id = row['id'];
+    
+    final oldTxResult = await db.query('transactions', where: 'id = ?', whereArgs: [id]);
+    if (oldTxResult.isEmpty) return;
+    final oldTx = oldTxResult.first;
+    
+    final double oldAmount = (oldTx['amount'] as num).toDouble();
+    final String oldType = oldTx['type'].toString();
+    final int oldAccountId = (oldTx['account_id'] as num).toInt();
+    
+    final oldAccountResult = await db.query('accounts', where: 'id = ?', whereArgs: [oldAccountId]);
+    if (oldAccountResult.isNotEmpty) {
+      double bal = (oldAccountResult.first['balance'] as num).toDouble();
+      double revertedBal = oldType == 'Credit' ? bal - oldAmount : bal + oldAmount;
+      await db.update('accounts', {'balance': revertedBal}, where: 'id = ?', whereArgs: [oldAccountId]);
+    }
+
+    final double newAmount = (row['amount'] as num).toDouble();
+    final String newType = row['type'];
+    final int newAccountId = (row['account_id'] as num).toInt();
+    
+    final newAccountResult = await db.query('accounts', where: 'id = ?', whereArgs: [newAccountId]);
+    if (newAccountResult.isNotEmpty) {
+      double bal = (newAccountResult.first['balance'] as num).toDouble();
+      double finalBal = newType == 'Credit' ? bal + newAmount : bal - newAmount;
+      await db.update('accounts', {'balance': finalBal}, where: 'id = ?', whereArgs: [newAccountId]);
+    }
+
+    await db.update('transactions', row, where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> deleteTransaction(int id) async {
+    final db = await instance.database;
+    
+    final txResult = await db.query('transactions', where: 'id = ?', whereArgs: [id]);
+    if (txResult.isNotEmpty) {
+      final tx = txResult.first;
+      final double amount = (tx['amount'] as num).toDouble();
+      final String type = tx['type'].toString();
+      final int accountId = (tx['account_id'] as num).toInt();
+      
+      final accResult = await db.query('accounts', where: 'id = ?', whereArgs: [accountId]);
+      if (accResult.isNotEmpty) {
+        double bal = (accResult.first['balance'] as num).toDouble();
+        double newBal = type == 'Credit' ? bal - amount : bal + amount;
+        await db.update('accounts', {'balance': newBal}, where: 'id = ?', whereArgs: [accountId]);
+      }
+    }
+    
+    await db.delete('transactions', where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<List<Map<String, dynamic>>> getRecentTransactions({int limit = 10}) async {
     final db = await instance.database;
     return await db.rawQuery('''
@@ -232,7 +286,6 @@ class DatabaseHelper {
 
   Future<List<Map<String, dynamic>>> getCategorySpending({String? timeframe}) async {
     final db = await instance.database;
-    // Simple grouping by category for now
     return await db.rawQuery('''
       SELECT c.name, c.icon, SUM(t.amount) as total 
       FROM transactions t 

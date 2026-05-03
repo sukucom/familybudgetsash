@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import '../widgets/sash_keypad.dart';
 import '../theme/app_theme.dart';
+import '../widgets/sash_keypad.dart';
 import '../database/database_helper.dart';
 import '../models/category_model.dart';
-import '../models/transaction_model.dart';
 
 class AddTransactionScreen extends StatefulWidget {
-  const AddTransactionScreen({super.key});
+  final Map<String, dynamic>? existingTransaction;
+  const AddTransactionScreen({super.key, this.existingTransaction});
 
   @override
   State<AddTransactionScreen> createState() => _AddTransactionScreenState();
@@ -20,6 +20,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   List<CategoryModel> _categories = [];
   List<Map<String, dynamic>> _accounts = [];
   bool _isLoading = true;
+  final TextEditingController _noteController = TextEditingController();
 
   @override
   void initState() {
@@ -35,23 +36,39 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     setState(() {
       _categories = categories;
       _accounts = accounts;
-      if (accounts.isNotEmpty) _selectedAccount = accounts.first;
-      _selectedCategory = categories.firstWhere((c) => c.type == (_isDebit ? 'Expense' : 'Income'), orElse: () => categories.first);
+      
+      if (widget.existingTransaction != null) {
+        final tx = widget.existingTransaction!;
+        _amount = (tx['amount'] as num).toStringAsFixed(0);
+        _isDebit = tx['type'] == 'Debit';
+        _noteController.text = tx['note'] ?? "";
+        _selectedAccount = accounts.firstWhere((a) => a['id'] == tx['account_id'], orElse: () => accounts.first);
+        _selectedCategory = categories.firstWhere((c) => c.id == tx['category_id'], orElse: () => categories.first);
+      } else {
+        if (accounts.isNotEmpty) _selectedAccount = accounts.first;
+        _selectedCategory = categories.firstWhere((c) => c.type == (_isDebit ? 'Expense' : 'Income'), orElse: () => categories.first);
+      }
       _isLoading = false;
     });
   }
 
-  void _handleKeyPress(String key) {
+  void _onKeyPress(String value) {
     setState(() {
-      if (_amount == "0") {
-        _amount = key;
+      if (value == ".") {
+        if (!_amount.contains(".")) {
+          _amount += ".";
+        }
       } else {
-        _amount += key;
+        if (_amount == "0") {
+          _amount = value;
+        } else {
+          _amount += value;
+        }
       }
     });
   }
 
-  void _handleDelete() {
+  void _onDelete() {
     setState(() {
       if (_amount.length > 1) {
         _amount = _amount.substring(0, _amount.length - 1);
@@ -61,46 +78,77 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     });
   }
 
-  Future<void> _handleSave() async {
+  Future<void> _saveTransaction() async {
     if (_amount == "0") return;
 
     final db = DatabaseHelper.instance;
     if (_selectedAccount == null) return;
 
-    final transaction = TransactionModel(
-      accountId: _selectedAccount!['id'],
-      memberId: 1, // Default to first member
-      categoryId: _selectedCategory?.id ?? 1,
-      amount: double.parse(_amount),
-      date: DateTime.now(),
-      type: _isDebit ? 'Debit' : 'Credit',
-    );
+    final transactionData = {
+      'account_id': _selectedAccount!['id'],
+      'member_id': 1, // Default
+      'category_id': _selectedCategory?.id ?? 1,
+      'amount': double.parse(_amount),
+      'date': widget.existingTransaction?['date'] ?? DateTime.now().toIso8601String(),
+      'note': _noteController.text,
+      'type': _isDebit ? 'Debit' : 'Credit',
+    };
 
-    await db.insertTransaction(transaction.toMap());
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text("Nice! ₹$_amount logged 🔥"),
-          backgroundColor: SashTheme.accent,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      Navigator.pop(context, true); // Return true to indicate data changed
+    if (widget.existingTransaction != null) {
+      transactionData['id'] = widget.existingTransaction!['id'];
+      await db.updateTransaction(transactionData);
+    } else {
+      await db.insertTransaction(transactionData);
     }
+
+    if (mounted) Navigator.pop(context, true);
+  }
+
+  Future<void> _deleteTransaction() async {
+    if (widget.existingTransaction == null) return;
+    
+    final db = DatabaseHelper.instance;
+    await db.deleteTransaction(widget.existingTransaction!['id']);
+    
+    if (mounted) Navigator.pop(context, true);
   }
 
   @override
   Widget build(BuildContext context) {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+
     return Scaffold(
       backgroundColor: SashTheme.backgroundDark,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        title: const Text("Add Transaction", style: TextStyle(fontFamily: 'Outfit')),
+        title: Text(widget.existingTransaction != null ? "Edit Transaction" : "New Entry", 
+          style: const TextStyle(fontFamily: 'Outfit')),
         actions: [
-          IconButton(onPressed: () {}, icon: const Icon(Icons.settings_outlined)),
+          if (widget.existingTransaction != null)
+            IconButton(
+              icon: const Icon(Icons.delete_outline, color: SashTheme.error),
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                    backgroundColor: SashTheme.surfaceDark,
+                    title: const Text("Delete Transaction?", style: TextStyle(color: Colors.white)),
+                    content: const Text("This will revert the account balance changes.", style: TextStyle(color: Colors.white70)),
+                    actions: [
+                      TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
+                      TextButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _deleteTransaction();
+                        }, 
+                        child: const Text("Delete", style: TextStyle(color: SashTheme.error))
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
         ],
       ),
       body: Column(
@@ -113,11 +161,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           _buildTypeToggle(),
           const SizedBox(height: 24),
           _buildCategoryChips(),
+          const SizedBox(height: 24),
+          _buildNoteField(),
           const SizedBox(height: 32),
           SashKeypad(
-            onKeyPressed: _handleKeyPress,
-            onDelete: _handleDelete,
-            onDone: _handleSave,
+            onKeyPressed: _onKeyPress,
+            onDelete: _onDelete,
+            onDone: _saveTransaction,
           ),
         ],
       ),
@@ -127,95 +177,19 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget _buildAmountDisplay() {
     return Column(
       children: [
-        Text(
-          _isDebit ? "Expense" : "Income",
-          style: TextStyle(color: _isDebit ? SashTheme.error : SashTheme.accent, fontWeight: FontWeight.w600),
-        ),
+        const Text("AMOUNT", style: TextStyle(color: Colors.white38, fontSize: 12, letterSpacing: 2)),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.baseline,
+          textBaseline: TextBaseline.alphabetic,
           children: [
-            const Padding(
-              padding: EdgeInsets.only(top: 12),
-              child: Text("₹", style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white24)),
-            ),
-            Text(
-              _amount,
-              style: const TextStyle(fontSize: 72, fontWeight: FontWeight.bold, fontFamily: 'Outfit'),
-            ),
+            Text("₹", style: TextStyle(color: _isDebit ? SashTheme.error : SashTheme.accent, fontSize: 32, fontWeight: FontWeight.bold)),
+            const SizedBox(width: 8),
+            Text(_amount, style: const TextStyle(color: Colors.white, fontSize: 64, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
           ],
         ),
       ],
-    );
-  }
-
-  Widget _buildTypeToggle() {
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white10,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          _buildToggleItem("Debit", _isDebit, SashTheme.error),
-          _buildToggleItem("Credit", !_isDebit, SashTheme.accent),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildToggleItem(String label, bool isActive, Color activeColor) {
-    return GestureDetector(
-      onTap: () {
-        setState(() {
-          _isDebit = label == "Debit";
-          // Update selected category based on type
-          _selectedCategory = _categories.firstWhere(
-            (c) => c.type == (_isDebit ? 'Expense' : 'Income'),
-            orElse: () => _categories.first,
-          );
-        });
-      },
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-        decoration: BoxDecoration(
-          color: isActive ? activeColor : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-            color: isActive ? Colors.white : Colors.white38,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildCategoryChips() {
-    final filteredCategories = _categories.where((c) => c.type == (_isDebit ? 'Expense' : 'Income')).toList();
-    
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      child: Row(
-        children: filteredCategories.map((cat) => Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: ChoiceChip(
-            label: Text("${cat.icon} ${cat.name}"),
-            selected: _selectedCategory?.id == cat.id,
-            onSelected: (val) => setState(() => _selectedCategory = cat),
-            selectedColor: SashTheme.primary,
-            backgroundColor: Colors.white10,
-            labelStyle: TextStyle(color: _selectedCategory?.id == cat.id ? Colors.white : Colors.white70),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-          ),
-        )).toList(),
-      ),
     );
   }
 
@@ -256,6 +230,92 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
             ),
           );
         }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildTypeToggle() {
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      padding: const EdgeInsets.all(6),
+      decoration: BoxDecoration(
+        color: Colors.white10,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        children: [
+          Expanded(child: _buildToggleItem("Debit", _isDebit, SashTheme.error)),
+          Expanded(child: _buildToggleItem("Credit", !_isDebit, SashTheme.accent)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildToggleItem(String label, bool isActive, Color activeColor) {
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _isDebit = label == "Debit";
+          _selectedCategory = _categories.firstWhere((c) => c.type == (_isDebit ? 'Expense' : 'Income'), orElse: () => _categories.first);
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: BoxDecoration(
+          color: isActive ? activeColor : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Center(
+          child: Text(label, style: TextStyle(color: isActive ? Colors.white : Colors.white38, fontWeight: FontWeight.bold)),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCategoryChips() {
+    final filteredCategories = _categories.where((c) => c.type == (_isDebit ? 'Expense' : 'Income')).toList();
+    
+    return Container(
+      height: 50,
+      child: ListView.builder(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: filteredCategories.length,
+        itemBuilder: (context, index) {
+          final cat = filteredCategories[index];
+          final isSelected = _selectedCategory?.id == cat.id;
+          return GestureDetector(
+            onTap: () => setState(() => _selectedCategory = cat),
+            child: Container(
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: isSelected ? SashTheme.surfaceDark : Colors.transparent,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isSelected ? SashTheme.primary : Colors.white10),
+              ),
+              child: Center(child: Text("${cat.icon} ${cat.name}", style: TextStyle(color: isSelected ? Colors.white : Colors.white38))),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildNoteField() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: TextField(
+        controller: _noteController,
+        style: const TextStyle(color: Colors.white, fontSize: 14),
+        decoration: InputDecoration(
+          hintText: "Add a note...",
+          hintStyle: const TextStyle(color: Colors.white10),
+          prefixIcon: const Icon(Icons.notes, color: Colors.white10, size: 20),
+          filled: true,
+          fillColor: Colors.white.withOpacity(0.05),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+        ),
       ),
     );
   }
