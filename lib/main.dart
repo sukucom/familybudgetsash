@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/add_transaction_screen.dart';
+import 'database/database_helper.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Database
+  await DatabaseHelper.instance.database;
+  
   runApp(const FamilyBudgetSASH());
 }
 
@@ -62,11 +68,16 @@ class _MainNavigationState extends State<MainNavigation> {
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
       floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.push(
+        onPressed: () async {
+          final result = await Navigator.push(
             context,
             MaterialPageRoute(builder: (context) => const AddTransactionScreen()),
           );
+          
+          if (result == true) {
+            // Refresh the current screen if it's the dashboard
+            setState(() {});
+          }
         },
         child: const Icon(Icons.add, size: 32),
       ),

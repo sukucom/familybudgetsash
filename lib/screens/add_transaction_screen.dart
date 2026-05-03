@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import '../widgets/sash_keypad.dart';
 import '../theme/app_theme.dart';
+import '../database/database_helper.dart';
+import '../models/category_model.dart';
+import '../models/transaction_model.dart';
 
 class AddTransactionScreen extends StatefulWidget {
   const AddTransactionScreen({super.key});
@@ -12,7 +15,24 @@ class AddTransactionScreen extends StatefulWidget {
 class _AddTransactionScreenState extends State<AddTransactionScreen> {
   String _amount = "0";
   bool _isDebit = true;
-  String _selectedCategory = "Food";
+  CategoryModel? _selectedCategory;
+  List<CategoryModel> _categories = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCategories();
+  }
+
+  Future<void> _loadCategories() async {
+    final categories = await DatabaseHelper.instance.getCategories();
+    setState(() {
+      _categories = categories;
+      _selectedCategory = categories.firstWhere((c) => c.type == (_isDebit ? 'Expense' : 'Income'), orElse: () => categories.first);
+      _isLoading = false;
+    });
+  }
 
   void _handleKeyPress(String key) {
     setState(() {
@@ -34,20 +54,39 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     });
   }
 
-  void _handleSave() {
-    // Show success snackbar or animation
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text("Nice! ₹$_amount logged 🔥"),
-        backgroundColor: SashTheme.accent,
-        behavior: SnackBarBehavior.floating,
-      ),
+  Future<void> _handleSave() async {
+    if (_amount == "0") return;
+
+    final db = DatabaseHelper.instance;
+    final accounts = await db.getAccounts();
+    if (accounts.isEmpty) return;
+
+    final transaction = TransactionModel(
+      accountId: accounts.first['id'], // Default to first account
+      memberId: 1, // Default to first member
+      categoryId: _selectedCategory?.id ?? 1,
+      amount: double.parse(_amount),
+      date: DateTime.now(),
+      type: _isDebit ? 'Debit' : 'Credit',
     );
-    Navigator.pop(context);
+
+    await db.insertTransaction(transaction.toMap());
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text("Nice! ₹$_amount logged 🔥"),
+          backgroundColor: SashTheme.accent,
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+      Navigator.pop(context, true); // Return true to indicate data changed
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
     return Scaffold(
       backgroundColor: SashTheme.backgroundDark,
       appBar: AppBar(
@@ -122,7 +161,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
   Widget _buildToggleItem(String label, bool isActive, Color activeColor) {
     return GestureDetector(
-      onTap: () => setState(() => _isDebit = label == "Debit"),
+      onTap: () {
+        setState(() {
+          _isDebit = label == "Debit";
+          // Update selected category based on type
+          _selectedCategory = _categories.firstWhere(
+            (c) => c.type == (_isDebit ? 'Expense' : 'Income'),
+            orElse: () => _categories.first,
+          );
+        });
+      },
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         decoration: BoxDecoration(
@@ -141,20 +189,21 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   }
 
   Widget _buildCategoryChips() {
-    final categories = ["Food", "Travel", "Rent", "Shopping", "Bills"];
+    final filteredCategories = _categories.where((c) => c.type == (_isDebit ? 'Expense' : 'Income')).toList();
+    
     return SingleChildScrollView(
       scrollDirection: Axis.horizontal,
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
-        children: categories.map((cat) => Padding(
+        children: filteredCategories.map((cat) => Padding(
           padding: const EdgeInsets.only(right: 12),
           child: ChoiceChip(
-            label: Text(cat),
-            selected: _selectedCategory == cat,
+            label: Text("${cat.icon} ${cat.name}"),
+            selected: _selectedCategory?.id == cat.id,
             onSelected: (val) => setState(() => _selectedCategory = cat),
             selectedColor: SashTheme.primary,
             backgroundColor: Colors.white10,
-            labelStyle: TextStyle(color: _selectedCategory == cat ? Colors.white : Colors.white70),
+            labelStyle: TextStyle(color: _selectedCategory?.id == cat.id ? Colors.white : Colors.white70),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
           ),
         )).toList(),

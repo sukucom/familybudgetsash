@@ -1,37 +1,73 @@
 import 'package:flutter/material.dart';
 import '../widgets/glass_card.dart';
 import '../theme/app_theme.dart';
+import '../database/database_helper.dart';
 
-class DashboardScreen extends StatelessWidget {
+class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
 
   @override
+  State<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends State<DashboardScreen> {
+  double _totalBalance = 0.0;
+  List<Map<String, dynamic>> _accounts = [];
+  List<Map<String, dynamic>> _recentTransactions = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshData();
+  }
+
+  Future<void> _refreshData() async {
+    final db = DatabaseHelper.instance;
+    final balance = await db.getTotalBalance();
+    final accounts = await db.getAccounts();
+    final transactions = await db.getRecentTransactions();
+
+    setState(() {
+      _totalBalance = balance;
+      _accounts = accounts;
+      _recentTransactions = transactions;
+      _isLoading = false;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
+    if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 20),
-              _buildHeader(),
-              const SizedBox(height: 24),
-              _buildBalanceCard(),
-              const SizedBox(height: 32),
-              _buildSectionHeader("My Accounts"),
-              const SizedBox(height: 16),
-              _buildAccountStrip(),
-              const SizedBox(height: 32),
-              _buildSectionHeader("Daily Streak"),
-              const SizedBox(height: 16),
-              _buildStreakCard(),
-              const SizedBox(height: 32),
-              _buildSectionHeader("Recent Transactions"),
-              const SizedBox(height: 16),
-              _buildRecentTransactions(),
-              const SizedBox(height: 100), // Spacing for FAB
-            ],
+      body: RefreshIndicator(
+        onRefresh: _refreshData,
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 20),
+                _buildHeader(),
+                const SizedBox(height: 24),
+                _buildBalanceCard(),
+                const SizedBox(height: 32),
+                _buildSectionHeader("My Accounts"),
+                const SizedBox(height: 16),
+                _buildAccountStrip(),
+                const SizedBox(height: 32),
+                _buildSectionHeader("Daily Streak"),
+                const SizedBox(height: 16),
+                _buildStreakCard(),
+                const SizedBox(height: 32),
+                _buildSectionHeader("Recent Transactions"),
+                const SizedBox(height: 16),
+                _buildRecentTransactions(),
+                const SizedBox(height: 100), // Spacing for FAB
+              ],
+            ),
           ),
         ),
       ),
@@ -65,13 +101,11 @@ class DashboardScreen extends StatelessWidget {
         children: [
           const Text("Total Balance", style: TextStyle(color: Colors.white70, fontSize: 16)),
           const SizedBox(height: 8),
-          const Text("₹2,45,680.50", style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
+          Text("₹${_totalBalance.toStringAsFixed(2)}", style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
           const SizedBox(height: 16),
           Row(
             children: [
-              _buildStat("+₹12,400", Icons.arrow_upward, SashTheme.accent),
-              const SizedBox(width: 20),
-              _buildStat("-₹8,210", Icons.arrow_downward, SashTheme.error),
+              _buildStat("Overview", Icons.trending_up, SashTheme.accent),
             ],
           ),
         ],
@@ -96,13 +130,17 @@ class DashboardScreen extends StatelessWidget {
   Widget _buildAccountStrip() {
     return SizedBox(
       height: 100,
-      child: ListView(
+      child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        children: [
-          _buildAccountItem("ICICI Bank", "₹1,32,450", Icons.account_balance),
-          _buildAccountItem("HDFC Bank", "₹98,230", Icons.credit_card),
-          _buildAccountItem("Cash", "₹15,000", Icons.payments),
-        ],
+        itemCount: _accounts.length,
+        itemBuilder: (context, index) {
+          final account = _accounts[index];
+          return _buildAccountItem(
+            account['name'], 
+            "₹${account['balance'].toStringAsFixed(0)}", 
+            account['type'] == 'Wallet' ? Icons.payments : Icons.account_balance
+          );
+        },
       ),
     );
   }
@@ -151,12 +189,17 @@ class DashboardScreen extends StatelessWidget {
   }
 
   Widget _buildRecentTransactions() {
+    if (_recentTransactions.isEmpty) {
+      return const Center(child: Text("No transactions yet", style: TextStyle(color: Colors.white24)));
+    }
     return Column(
-      children: [
-        _buildTransactionItem("Groceries", "-₹3,210", "Today, 2:30 PM", Icons.shopping_basket, SashTheme.error),
-        _buildTransactionItem("Salary", "+₹85,000", "Yesterday", Icons.work, SashTheme.accent),
-        _buildTransactionItem("Rent", "-₹25,000", "1 May", Icons.home, SashTheme.error),
-      ],
+      children: _recentTransactions.map((t) => _buildTransactionItem(
+        t['category_name'], 
+        "${t['type'] == 'Credit' ? '+' : '-'}₹${t['amount']}", 
+        t['date'].toString().split('T')[0], 
+        Icons.circle, // Placeholder for icon
+        t['type'] == 'Credit' ? SashTheme.accent : SashTheme.error
+      )).toList(),
     );
   }
 
