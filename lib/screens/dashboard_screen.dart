@@ -15,6 +15,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   double _totalBalance = 0;
   List<Map<String, dynamic>> _recentTransactions = [];
+  String _familyName = "Household";
   bool _isLoading = true;
 
   @override
@@ -35,10 +36,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final db = DatabaseHelper.instance;
     final balance = await db.getTotalBalance();
     final transactions = await db.getRecentTransactions(limit: 10);
+    final family = await db.getFamily();
 
     setState(() {
       _totalBalance = balance;
       _recentTransactions = transactions;
+      _familyName = family?['name'] ?? "Household";
       _isLoading = false;
     });
   }
@@ -81,17 +84,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Widget _buildHeader() {
-    return const Row(
+    return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text("Welcome back,", style: TextStyle(color: Colors.white60, fontSize: 14)),
-            Text("Sash Household", style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
+            const Text("Welcome back,", style: TextStyle(color: Colors.white60, fontSize: 14)),
+            Text(_familyName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
           ],
         ),
-        CircleAvatar(
+        const CircleAvatar(
           backgroundColor: SashTheme.primary,
           child: Icon(Icons.person, color: Colors.white),
         ),

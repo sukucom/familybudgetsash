@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'theme/app_theme.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/add_transaction_screen.dart';
 import 'screens/reports_screen.dart';
 import 'screens/accounts_screen.dart';
 import 'screens/settings_screen.dart';
+import 'screens/onboarding_screen.dart';
 import 'database/database_helper.dart';
 
 void main() async {
@@ -13,11 +15,16 @@ void main() async {
   // Initialize Database
   await DatabaseHelper.instance.database;
   
-  runApp(const FamilyBudgetSASH());
+  // Check Onboarding Status
+  final prefs = await SharedPreferences.getInstance();
+  final bool showOnboarding = !(prefs.getBool('onboarding_complete') ?? false);
+  
+  runApp(FamilyBudgetSASH(showOnboarding: showOnboarding));
 }
 
 class FamilyBudgetSASH extends StatelessWidget {
-  const FamilyBudgetSASH({super.key});
+  final bool showOnboarding;
+  const FamilyBudgetSASH({super.key, required this.showOnboarding});
 
   @override
   Widget build(BuildContext context) {
@@ -26,8 +33,8 @@ class FamilyBudgetSASH extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: SashTheme.lightTheme,
       darkTheme: SashTheme.darkTheme,
-      themeMode: ThemeMode.dark, // Defaulting to Dark Mode for the premium look
-      home: const MainNavigation(),
+      themeMode: ThemeMode.dark,
+      home: showOnboarding ? const OnboardingScreen() : const MainNavigation(),
     );
   }
 }
@@ -82,7 +89,6 @@ class _MainNavigationState extends State<MainNavigation> {
           );
           
           if (result == true) {
-            // Trigger rebuild of the whole navigation and increment refresh count
             setState(() {
               _refreshCount++;
             });
