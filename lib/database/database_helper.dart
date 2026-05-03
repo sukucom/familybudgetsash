@@ -28,12 +28,10 @@ class DatabaseHelper {
   Future _createDB(Database db, int version) async {
     const idType = 'INTEGER PRIMARY KEY AUTOINCREMENT';
     const textType = 'TEXT NOT NULL';
-    const boolType = 'BOOLEAN NOT NULL';
     const integerType = 'INTEGER NOT NULL';
     const floatType = 'REAL NOT NULL';
     const nullableTextType = 'TEXT';
 
-    // 1. Families Table
     await db.execute('''
       CREATE TABLE families (
         id $idType,
@@ -42,7 +40,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // 2. Members Table
     await db.execute('''
       CREATE TABLE members (
         id $idType,
@@ -54,7 +51,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // 3. Accounts Table
     await db.execute('''
       CREATE TABLE accounts (
         id $idType,
@@ -66,7 +62,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // 4. Categories Table
     await db.execute('''
       CREATE TABLE categories (
         id $idType,
@@ -76,7 +71,6 @@ class DatabaseHelper {
       )
     ''');
 
-    // 5. Transactions Table
     await db.execute('''
       CREATE TABLE transactions (
         id $idType,
@@ -93,12 +87,10 @@ class DatabaseHelper {
       )
     ''');
 
-    // Seed Initial Data
     await _seedData(db);
   }
 
   Future _seedData(Database db) async {
-    // Default Categories
     final List<CategoryModel> defaultCategories = [
       CategoryModel(name: 'Food', icon: '🍔', type: 'Expense'),
       CategoryModel(name: 'Transport', icon: '🚗', type: 'Expense'),
@@ -113,7 +105,6 @@ class DatabaseHelper {
       await db.insert('categories', cat.toMap());
     }
 
-    // Default Family & Member (Conceptual)
     final familyId = await db.insert('families', {'name': 'Default Family'});
     await db.insert('members', {
       'family_id': familyId,
@@ -121,7 +112,6 @@ class DatabaseHelper {
       'role': 'Admin'
     });
 
-    // Default Account
     await db.insert('accounts', {
       'family_id': familyId,
       'name': 'Cash',
@@ -130,7 +120,6 @@ class DatabaseHelper {
     });
   }
 
-  // CRUD Operations - Categories
   Future<List<CategoryModel>> getCategories({String? type}) async {
     final db = await instance.database;
     final result = type != null 
@@ -139,24 +128,31 @@ class DatabaseHelper {
     return result.map((json) => CategoryModel.fromMap(json)).toList();
   }
 
-  // CRUD Operations - Accounts
   Future<List<Map<String, dynamic>>> getAccounts() async {
     final db = await instance.database;
     return await db.query('accounts');
   }
 
-  // CRUD Operations - Transactions
+  Future<int> insertAccount(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.insert('accounts', row);
+  }
+
+  Future<int> deleteAccount(int id) async {
+    final db = await instance.database;
+    return await db.delete('accounts', where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<int> insertTransaction(Map<String, dynamic> row) async {
     final db = await instance.database;
     
-    // Update account balance
     final accountId = row['account_id'];
-    final amount = row['amount'];
+    final amount = (row['amount'] as num).toDouble();
     final type = row['type'];
     
     final accountResult = await db.query('accounts', where: 'id = ?', whereArgs: [accountId]);
     if (accountResult.isNotEmpty) {
-      double currentBalance = accountResult.first['balance'] as double;
+      double currentBalance = (accountResult.first['balance'] as num).toDouble();
       double newBalance = type == 'Credit' ? currentBalance + amount : currentBalance - amount;
       await db.update('accounts', {'balance': newBalance}, where: 'id = ?', whereArgs: [accountId]);
     }
@@ -172,6 +168,18 @@ class DatabaseHelper {
       JOIN categories c ON t.category_id = c.id 
       ORDER BY t.date DESC 
       LIMIT $limit
+    ''');
+  }
+
+  Future<List<Map<String, dynamic>>> getCategorySpending({String? timeframe}) async {
+    final db = await instance.database;
+    // Simple grouping by category for now
+    return await db.rawQuery('''
+      SELECT c.name, c.icon, SUM(t.amount) as total 
+      FROM transactions t 
+      JOIN categories c ON t.category_id = c.id 
+      WHERE t.type = 'Debit'
+      GROUP BY c.id
     ''');
   }
 

@@ -7,6 +7,7 @@ class GlassCard extends StatelessWidget {
   final double opacity;
   final double blur;
   final EdgeInsetsGeometry? padding;
+  final EdgeInsetsGeometry? margin;
 
   const GlassCard({
     super.key,
@@ -15,6 +16,7 @@ class GlassCard extends StatelessWidget {
     this.opacity = 0.1,
     this.blur = 10.0,
     this.padding,
+    this.margin,
   });
 
   @override
@@ -24,6 +26,7 @@ class GlassCard extends StatelessWidget {
       child: BackdropFilter(
         filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
         child: Container(
+          margin: margin,
           padding: padding ?? const EdgeInsets.all(20),
           decoration: BoxDecoration(
             color: Colors.white.withOpacity(opacity),

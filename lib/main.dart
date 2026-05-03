@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'theme/app_theme.dart';
 import 'screens/dashboard_screen.dart';
 import 'screens/add_transaction_screen.dart';
+import 'screens/reports_screen.dart';
+import 'screens/accounts_screen.dart';
 import 'database/database_helper.dart';
 
 void main() async {
@@ -39,17 +41,20 @@ class MainNavigation extends StatefulWidget {
 class _MainNavigationState extends State<MainNavigation> {
   int _currentIndex = 0;
 
-  final List<Widget> _screens = [
-    const DashboardScreen(),
-    const Center(child: Text("Reports")),
-    const Center(child: Text("Accounts")),
-    const Center(child: Text("Settings")),
-  ];
-
   @override
   Widget build(BuildContext context) {
+    final List<Widget> screens = [
+      const DashboardScreen(),
+      const ReportsScreen(),
+      const AccountsScreen(),
+      const Center(child: Text("Settings")),
+    ];
+
     return Scaffold(
-      body: _screens[_currentIndex],
+      body: IndexedStack(
+        index: _currentIndex,
+        children: screens,
+      ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -75,7 +80,7 @@ class _MainNavigationState extends State<MainNavigation> {
           );
           
           if (result == true) {
-            // Refresh the current screen if it's the dashboard
+            // Trigger rebuild of the whole navigation, which forces screens to rebuild
             setState(() {});
           }
         },
