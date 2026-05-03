@@ -284,15 +284,25 @@ class DatabaseHelper {
     await batch.commit(noResult: true);
   }
 
-  Future<List<Map<String, dynamic>>> getCategorySpending({String? timeframe}) async {
+  Future<List<Map<String, dynamic>>> getCategorySpending({String timeframe = 'This Month', String type = 'Debit'}) async {
     final db = await instance.database;
+    String dateFilter = "";
+    
+    if (timeframe == 'This Month') {
+      dateFilter = "AND strftime('%m', t.date) = strftime('%m', 'now') AND strftime('%Y', t.date) = strftime('%Y', 'now')";
+    } else if (timeframe == 'Last Month') {
+      dateFilter = "AND strftime('%m', t.date) = strftime('%m', 'now', '-1 month') AND strftime('%Y', t.date) = strftime('%Y', 'now', '-1 month')";
+    } else if (timeframe == 'This Year') {
+      dateFilter = "AND strftime('%Y', t.date) = strftime('%Y', 'now')";
+    }
+
     return await db.rawQuery('''
       SELECT c.name, c.icon, SUM(t.amount) as total 
       FROM transactions t 
       JOIN categories c ON t.category_id = c.id 
-      WHERE t.type = 'Debit'
+      WHERE t.type = ? $dateFilter
       GROUP BY c.id
-    ''');
+    ''', [type]);
   }
 
   Future<double> getTotalBalance() async {
