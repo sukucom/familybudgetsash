@@ -120,6 +120,34 @@ class DatabaseHelper {
     });
   }
 
+  // CRUD Operations - Families
+  Future<Map<String, dynamic>?> getFamily() async {
+    final db = await instance.database;
+    final result = await db.query('families', limit: 1);
+    return result.isNotEmpty ? result.first : null;
+  }
+
+  Future<int> updateFamilyName(String name) async {
+    final db = await instance.database;
+    return await db.update('families', {'name': name});
+  }
+
+  // CRUD Operations - Members
+  Future<List<Map<String, dynamic>>> getMembers() async {
+    final db = await instance.database;
+    return await db.query('members');
+  }
+
+  Future<int> insertMember(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.insert('members', row);
+  }
+
+  Future<int> deleteMember(int id) async {
+    final db = await instance.database;
+    return await db.delete('members', where: 'id = ?', whereArgs: [id]);
+  }
+
   Future<List<CategoryModel>> getCategories({String? type}) async {
     final db = await instance.database;
     final result = type != null 

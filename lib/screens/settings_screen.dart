@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/app_theme.dart';
 import '../widgets/glass_card.dart';
 import 'categories_screen.dart';
+import 'family_setup_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -28,7 +29,12 @@ class SettingsScreen extends StatelessWidget {
                 Icons.category_outlined,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const CategoriesScreen())),
               ),
-              _buildSettingsItem("Family Setup", "Manage members and permissions", Icons.people_outline),
+              _buildSettingsItem(
+                "Family Setup", 
+                "Manage members and permissions", 
+                Icons.people_outline,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FamilySetupScreen())),
+              ),
               
               const SizedBox(height: 24),
               _buildSettingsSection("Data & Security"),
