@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import '../models/category_model.dart';
@@ -20,9 +21,16 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: _createDB,
+      onUpgrade: _upgradeDB,
     );
+  }
+
+  Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
+    if (oldVersion < 2) {
+      await db.execute('ALTER TABLE categories ADD COLUMN budget_limit REAL DEFAULT 0.0');
+    }
   }
 
   Future _createDB(Database db, int version) async {
@@ -67,7 +75,8 @@ class DatabaseHelper {
         id $idType,
         name $textType,
         icon $textType,
-        type $textType
+        type $textType,
+        budget_limit REAL DEFAULT 0.0
       )
     ''');
 
@@ -148,6 +157,11 @@ class DatabaseHelper {
     return await db.delete('members', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<int> updateMember(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.update('members', row, where: 'id = ?', whereArgs: [row['id']]);
+  }
+
   Future<List<CategoryModel>> getCategories({String? type}) async {
     final db = await instance.database;
     final result = type != null 
@@ -166,6 +180,11 @@ class DatabaseHelper {
     return await db.delete('categories', where: 'id = ?', whereArgs: [id]);
   }
 
+  Future<int> updateCategory(CategoryModel category) async {
+    final db = await instance.database;
+    return await db.update('categories', category.toMap(), where: 'id = ?', whereArgs: [category.id]);
+  }
+
   Future<List<Map<String, dynamic>>> getAccounts() async {
     final db = await instance.database;
     return await db.query('accounts');
@@ -174,6 +193,11 @@ class DatabaseHelper {
   Future<int> insertAccount(Map<String, dynamic> row) async {
     final db = await instance.database;
     return await db.insert('accounts', row);
+  }
+
+  Future<int> updateAccount(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.update('accounts', row, where: 'id = ?', whereArgs: [row['id']]);
   }
 
   Future<int> deleteAccount(int id) async {
@@ -305,10 +329,68 @@ class DatabaseHelper {
     ''', [type]);
   }
 
+  Future<List<Map<String, dynamic>>> getCategorySpendingWithBudgets({String timeframe = 'This Month'}) async {
+    final db = await instance.database;
+    String dateFilter = "";
+    
+    if (timeframe == 'This Month') {
+      dateFilter = "AND strftime('%m', t.date) = strftime('%m', 'now') AND strftime('%Y', t.date) = strftime('%Y', 'now')";
+    } else if (timeframe == 'Last Month') {
+      dateFilter = "AND strftime('%m', t.date) = strftime('%m', 'now', '-1 month') AND strftime('%Y', t.date) = strftime('%Y', 'now', '-1 month')";
+    } else if (timeframe == 'This Year') {
+      dateFilter = "AND strftime('%Y', t.date) = strftime('%Y', 'now')";
+    }
+
+    // Fetch all categories that are Expenses, then join with transactions.
+    // If a category has no transactions, it should still show up if it has a budget limit > 0
+    return await db.rawQuery('''
+      SELECT c.id, c.name, c.icon, c.budget_limit, COALESCE(SUM(t.amount), 0) as total 
+      FROM categories c 
+      LEFT JOIN transactions t ON t.category_id = c.id $dateFilter
+      WHERE c.type = 'Expense' AND c.budget_limit > 0
+      GROUP BY c.id
+      ORDER BY c.budget_limit DESC
+    ''');
+  }
+
   Future<double> getTotalBalance() async {
     final db = await instance.database;
     final result = await db.rawQuery('SELECT SUM(balance) as total FROM accounts');
     return (result.first['total'] as num?)?.toDouble() ?? 0.0;
+  }
+
+  Future<String> exportFullDatabase() async {
+    final db = await instance.database;
+    final Map<String, dynamic> backup = {};
+    backup['families'] = await db.query('families');
+    backup['members'] = await db.query('members');
+    backup['accounts'] = await db.query('accounts');
+    backup['categories'] = await db.query('categories');
+    backup['transactions'] = await db.query('transactions');
+    return jsonEncode(backup);
+  }
+
+  Future<void> importFullDatabase(String jsonStr) async {
+    final db = await instance.database;
+    final Map<String, dynamic> backup = jsonDecode(jsonStr);
+
+    await db.transaction((txn) async {
+      // Clear existing
+      await txn.delete('transactions');
+      await txn.delete('categories');
+      await txn.delete('accounts');
+      await txn.delete('members');
+      await txn.delete('families');
+
+      // Insert new
+      for (var table in ['families', 'members', 'accounts', 'categories', 'transactions']) {
+        if (backup[table] != null) {
+          for (var item in backup[table]) {
+            await txn.insert(table, item);
+          }
+        }
+      }
+    });
   }
 
   Future close() async {

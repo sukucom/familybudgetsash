@@ -59,11 +59,41 @@ class _MainNavigationState extends State<MainNavigation> {
       const SettingsScreen(),
     ];
 
-    return Scaffold(
-      body: IndexedStack(
-        index: _currentIndex,
-        children: screens,
-      ),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) async {
+        if (didPop) return;
+        final shouldPop = await showDialog<bool>(
+          context: context,
+          builder: (context) {
+            return AlertDialog(
+              backgroundColor: SashTheme.backgroundDark,
+              title: const Text('Exit App', style: TextStyle(fontFamily: 'Outfit', color: Colors.white)),
+              content: const Text('Are you sure you want to exit?', style: TextStyle(color: Colors.white70)),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context, false),
+                  child: const Text('Cancel', style: TextStyle(color: Colors.white60)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.pop(context, true),
+                  child: const Text('Exit', style: TextStyle(color: SashTheme.error)),
+                ),
+              ],
+            );
+          },
+        );
+        if (shouldPop ?? false) {
+          if (context.mounted) {
+            Navigator.pop(context);
+          }
+        }
+      },
+      child: Scaffold(
+        body: IndexedStack(
+          index: _currentIndex,
+          children: screens,
+        ),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (index) => setState(() => _currentIndex = index),
@@ -95,6 +125,7 @@ class _MainNavigationState extends State<MainNavigation> {
           }
         },
         child: const Icon(Icons.add, size: 32),
+      ),
       ),
     );
   }

@@ -19,6 +19,8 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Map<String, dynamic>? _selectedAccount;
   List<CategoryModel> _categories = [];
   List<Map<String, dynamic>> _accounts = [];
+  List<Map<String, dynamic>> _members = [];
+  Map<String, dynamic>? _selectedMember;
   bool _isLoading = true;
   final TextEditingController _noteController = TextEditingController();
 
@@ -32,10 +34,16 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     final db = DatabaseHelper.instance;
     final categories = await db.getCategories();
     final accounts = await db.getAccounts();
+    final members = await db.getMembers();
     
     setState(() {
       _categories = categories;
       _accounts = accounts;
+      _members = members;
+      
+      if (_members.isNotEmpty) {
+        _selectedMember = _members.firstWhere((m) => m['role'] == 'Admin', orElse: () => _members.first);
+      }
       
       if (widget.existingTransaction != null) {
         final tx = widget.existingTransaction!;
@@ -43,6 +51,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
         _isDebit = tx['type'] == 'Debit';
         _noteController.text = tx['note'] ?? "";
         _selectedAccount = accounts.firstWhere((a) => a['id'] == tx['account_id'], orElse: () => accounts.first);
+        _selectedMember = members.firstWhere((m) => m['id'] == tx['member_id'], orElse: () => members.first);
         _selectedCategory = categories.firstWhere((c) => c.id == tx['category_id'], orElse: () => categories.first);
       } else {
         if (accounts.isNotEmpty) _selectedAccount = accounts.first;
@@ -86,7 +95,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
 
     final transactionData = {
       'account_id': _selectedAccount!['id'],
-      'member_id': 1, // Default
+      'member_id': _selectedMember?['id'] ?? 1,
       'category_id': _selectedCategory?.id ?? 1,
       'amount': double.parse(_amount),
       'date': widget.existingTransaction?['date'] ?? DateTime.now().toIso8601String(),
@@ -157,9 +166,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           _buildAmountDisplay(),
           const SizedBox(height: 24),
           _buildAccountSelector(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
+          _buildMemberSelector(),
+          const SizedBox(height: 16),
           _buildTypeToggle(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 16),
           _buildCategoryChips(),
           const SizedBox(height: 24),
           _buildNoteField(),
@@ -220,6 +231,49 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                   const SizedBox(width: 8),
                   Text(
                     acc['name'],
+                    style: TextStyle(
+                      color: isSelected ? Colors.white : Colors.white60,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
+  }
+
+  Widget _buildMemberSelector() {
+    if (_members.isEmpty) return const SizedBox.shrink();
+    
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        children: _members.map((mem) {
+          final isSelected = _selectedMember?['id'] == mem['id'];
+          return GestureDetector(
+            onTap: () => setState(() => _selectedMember = mem),
+            child: Container(
+              margin: const EdgeInsets.only(right: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              decoration: BoxDecoration(
+                color: isSelected ? SashTheme.accent.withOpacity(0.2) : Colors.white10,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: isSelected ? SashTheme.accent : Colors.white24),
+              ),
+              child: Row(
+                children: [
+                  Icon(
+                    Icons.person,
+                    size: 16,
+                    color: isSelected ? SashTheme.accent : Colors.white60,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    mem['name'],
                     style: TextStyle(
                       color: isSelected ? Colors.white : Colors.white60,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,

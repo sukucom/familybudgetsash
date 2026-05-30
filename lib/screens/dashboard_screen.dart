@@ -15,6 +15,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   double _totalBalance = 0;
   List<Map<String, dynamic>> _recentTransactions = [];
+  List<Map<String, dynamic>> _budgets = [];
   String _familyName = "Household";
   bool _isLoading = true;
 
@@ -37,11 +38,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final balance = await db.getTotalBalance();
     final transactions = await db.getRecentTransactions(limit: 10);
     final family = await db.getFamily();
+    final budgets = await db.getCategorySpendingWithBudgets();
 
     setState(() {
       _totalBalance = balance;
       _recentTransactions = transactions;
       _familyName = family?['name'] ?? "Household";
+      _budgets = budgets;
       _isLoading = false;
     });
   }
@@ -64,6 +67,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 _buildHeader(),
                 const SizedBox(height: 32),
                 _buildBalanceCard(),
+                if (_budgets.isNotEmpty) ...[
+                  const SizedBox(height: 32),
+                  const Text("Budget Health", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
+                  const SizedBox(height: 16),
+                  _buildBudgetHealth(),
+                ],
                 const SizedBox(height: 32),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -139,6 +148,61 @@ class _DashboardScreenState extends State<DashboardScreen> {
         const SizedBox(height: 4),
         Text(amount, style: const TextStyle(fontWeight: FontWeight.bold)),
       ],
+    );
+  }
+
+  Widget _buildBudgetHealth() {
+    return Column(
+      children: _budgets.map((b) {
+        final limit = (b['budget_limit'] as num).toDouble();
+        final spent = (b['total'] as num).toDouble();
+        final percentage = limit > 0 ? (spent / limit).clamp(0.0, 1.0) : 0.0;
+        final isOverBudget = percentage >= 1.0;
+        final isWarning = percentage >= 0.8 && !isOverBudget;
+        
+        Color progressColor = SashTheme.primary;
+        if (isOverBudget) progressColor = SashTheme.error;
+        else if (isWarning) progressColor = Colors.orangeAccent;
+
+        return Container(
+          margin: const EdgeInsets.only(bottom: 16),
+          child: GlassCard(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        Text(b['icon'] ?? '📦', style: const TextStyle(fontSize: 18)),
+                        const SizedBox(width: 8),
+                        Text(b['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
+                      ],
+                    ),
+                    Text("₹${spent.toStringAsFixed(0)} / ₹${limit.toStringAsFixed(0)}", 
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: isOverBudget ? SashTheme.error : Colors.white,
+                      )),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(4),
+                  child: LinearProgressIndicator(
+                    value: percentage,
+                    backgroundColor: Colors.white10,
+                    valueColor: AlwaysStoppedAnimation<Color>(progressColor),
+                    minHeight: 8,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      }).toList(),
     );
   }
 

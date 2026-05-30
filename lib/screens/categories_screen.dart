@@ -30,10 +30,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     });
   }
 
-  void _showAddCategoryDialog() {
-    String name = "";
-    String icon = "📦";
-    String type = _filterType;
+  void _showAddOrEditCategoryDialog([CategoryModel? existingCat]) {
+    String name = existingCat?.name ?? "";
+    String icon = existingCat?.icon ?? "📦";
+    String type = existingCat?.type ?? _filterType;
+    double budgetLimit = existingCat?.budgetLimit ?? 0.0;
 
     showModalBottomSheet(
       context: context,
@@ -46,20 +47,32 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Add New Category", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
+            Text(existingCat == null ? "Add New Category" : "Edit Category", 
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
             const SizedBox(height: 20),
             TextField(
+              controller: TextEditingController(text: name),
               onChanged: (val) => name = val,
               decoration: const InputDecoration(labelText: "Category Name (e.g. Health)"),
               style: const TextStyle(color: Colors.white),
             ),
             const SizedBox(height: 16),
             TextField(
+              controller: TextEditingController(text: icon),
               onChanged: (val) => icon = val,
               decoration: const InputDecoration(labelText: "Icon (Emoji)"),
               style: const TextStyle(color: Colors.white),
             ),
             const SizedBox(height: 16),
+            if (type == "Expense")
+              TextField(
+                controller: TextEditingController(text: budgetLimit > 0 ? budgetLimit.toString() : ""),
+                onChanged: (val) => budgetLimit = double.tryParse(val) ?? 0.0,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(labelText: "Monthly Budget Limit (₹)", hintText: "0.00 for no limit"),
+                style: const TextStyle(color: Colors.white),
+              ),
+            if (type == "Expense") const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: type,
               dropdownColor: SashTheme.backgroundDark,
@@ -74,14 +87,23 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               child: ElevatedButton(
                 onPressed: () async {
                   if (name.isNotEmpty) {
-                    await DatabaseHelper.instance.insertCategory(
-                      CategoryModel(name: name, icon: icon, type: type)
+                    final newCat = CategoryModel(
+                      id: existingCat?.id,
+                      name: name, 
+                      icon: icon, 
+                      type: type,
+                      budgetLimit: type == "Expense" ? budgetLimit : 0.0,
                     );
-                    Navigator.pop(context);
+                    if (existingCat != null) {
+                      await DatabaseHelper.instance.updateCategory(newCat);
+                    } else {
+                      await DatabaseHelper.instance.insertCategory(newCat);
+                    }
+                    if (context.mounted) Navigator.pop(context);
                     _loadCategories();
                   }
                 },
-                child: const Text("Create Category"),
+                child: Text(existingCat == null ? "Create Category" : "Save Changes"),
               ),
             ),
           ],
@@ -114,7 +136,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 _buildFilterChip("Income"),
                 const Spacer(),
                 IconButton(
-                  onPressed: _showAddCategoryDialog,
+                  onPressed: () => _showAddOrEditCategoryDialog(),
                   icon: const Icon(Icons.add_circle, color: SashTheme.primary, size: 32),
                 ),
               ],
@@ -157,8 +179,21 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
           children: [
             Text(cat.icon, style: const TextStyle(fontSize: 24)),
             const SizedBox(width: 16),
-            Text(cat.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-            const Spacer(),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(cat.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                  if (cat.type == 'Expense' && cat.budgetLimit > 0)
+                    Text("Budget: ₹${cat.budgetLimit.toStringAsFixed(0)}", 
+                      style: const TextStyle(fontSize: 12, color: Colors.white60)),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: () => _showAddOrEditCategoryDialog(cat),
+              icon: const Icon(Icons.edit_outlined, color: Colors.white24, size: 20),
+            ),
             IconButton(
               onPressed: () async {
                 if (cat.id != null) {

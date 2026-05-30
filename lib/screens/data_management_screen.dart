@@ -23,39 +23,24 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     setState(() => _isExporting = true);
     try {
       final db = DatabaseHelper.instance;
-      final transactions = await db.getAllTransactionsDetailed();
+      final jsonStr = await db.exportFullDatabase();
 
-      if (transactions.isEmpty) {
+      if (jsonStr == '{}' || jsonStr.isEmpty) {
         _showSnackBar("No data to export", SashTheme.error);
         return;
       }
 
-      // Convert to CSV
-      List<List<dynamic>> csvData = [
-        ['Amount', 'Date', 'Type', 'Category', 'Account', 'Note'],
-        ...transactions.map((tx) => [
-          tx['amount'],
-          tx['date'],
-          tx['type'],
-          tx['category'],
-          tx['account'],
-          tx['note'] ?? ''
-        ])
-      ];
-
-      String csvString = csv.encode(csvData);
-
       // Save to persistent storage
       final directory = await getApplicationDocumentsDirectory();
-      final fileName = "family_budget_export_${DateTime.now().millisecondsSinceEpoch}.csv";
+      final fileName = "family_budget_backup_${DateTime.now().millisecondsSinceEpoch}.json";
       final path = "${directory.path}/$fileName";
       final file = File(path);
-      await file.writeAsString(csvString);
+      await file.writeAsString(jsonStr);
 
-      _showSnackBar("Export saved locally: $fileName", SashTheme.accent);
+      _showSnackBar("Backup saved locally: $fileName", SashTheme.accent);
 
       // Share
-      await Share.shareXFiles([XFile(path)], text: 'My Family Budget SASH Export');
+      await Share.shareXFiles([XFile(path)], text: 'My Family Budget SASH Backup');
     } catch (e) {
       _showSnackBar("Export failed: $e", SashTheme.error);
     } finally {
@@ -68,7 +53,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
     try {
       FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['csv'],
+        allowedExtensions: ['json'],
       );
 
       if (result == null || result.files.single.path == null) {
@@ -77,47 +62,12 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
       }
 
       final file = File(result.files.single.path!);
-      final csvString = await file.readAsString();
-      List<List<dynamic>> csvData = csv.decode(csvString);
-
-      if (csvData.length <= 1) {
-        _showSnackBar("Empty or invalid CSV file", SashTheme.error);
-        return;
-      }
+      final jsonString = await file.readAsString();
 
       final db = DatabaseHelper.instance;
-      final categories = await db.getCategories();
-      final accounts = await db.getAccounts();
+      await db.importFullDatabase(jsonString);
 
-      List<Map<String, dynamic>> toImport = [];
-      
-      // Basic header matching and mapping
-      for (int i = 1; i < csvData.length; i++) {
-        final row = csvData[i];
-        if (row.length < 5) continue;
-
-        // Try to find matching category and account by name
-        final catName = row[3].toString();
-        final accName = row[4].toString();
-
-        final cat = categories.firstWhere((c) => c.name == catName, orElse: () => categories.first);
-        final acc = accounts.firstWhere((a) => a['name'] == accName, orElse: () => accounts.first);
-
-        toImport.add({
-          'account_id': acc['id'],
-          'member_id': 1, // Default
-          'category_id': cat.id,
-          'amount': double.tryParse(row[0].toString()) ?? 0,
-          'date': row[1].toString(),
-          'type': row[2].toString(),
-          'note': row.length > 5 ? row[5].toString() : null,
-        });
-      }
-
-      if (toImport.isNotEmpty) {
-        await db.insertTransactionsBatch(toImport);
-        _showSnackBar("Successfully imported ${toImport.length} transactions!", SashTheme.accent);
-      }
+      _showSnackBar("Successfully restored backup!", SashTheme.accent);
     } catch (e) {
       _showSnackBar("Import failed: $e", SashTheme.error);
     } finally {
@@ -146,23 +96,23 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
           children: [
             const SizedBox(height: 20),
             _buildActionCard(
-              "Export Data", 
-              "Save your transactions as a CSV file to your device or cloud storage.",
+              "Export Backup", 
+              "Save your entire database as a JSON backup file to your device or cloud storage.",
               Icons.upload_file_outlined,
               _isExporting,
               _exportData,
             ),
             const SizedBox(height: 20),
             _buildActionCard(
-              "Import Data", 
-              "Import transactions from a CSV file. Make sure it follows the SASH format.",
+              "Import Backup", 
+              "Restore your database from a JSON backup. Warning: This will overwrite your current data.",
               Icons.download_for_offline_outlined,
               _isImporting,
               _importData,
             ),
             const Spacer(),
             const Text(
-              "Note: Importing data will add to your current records. Ensure your CSV follows the exported format for best results.",
+              "Note: A backup contains all your accounts, categories, and transactions. Restoring a backup completely replaces your current records.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white24, fontSize: 12),
             ),

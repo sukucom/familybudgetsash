@@ -91,6 +91,72 @@ class _AccountsScreenState extends State<AccountsScreen> {
       ),
     );
   }
+  void _showEditAccountDialog(Map<String, dynamic> account) {
+    String name = account['name'];
+    String type = account['type'];
+    double balance = (account['balance'] as num).toDouble();
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => GlassCard(
+        margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text("Edit Account", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
+            const SizedBox(height: 20),
+            TextFormField(
+              initialValue: name,
+              onChanged: (val) => name = val,
+              decoration: const InputDecoration(labelText: "Account Name (e.g. HDFC Bank)"),
+              style: const TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 16),
+            DropdownButtonFormField<String>(
+              value: type,
+              dropdownColor: SashTheme.backgroundDark,
+              onChanged: (val) => type = val!,
+              items: ["Bank", "Wallet", "Credit Card"].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
+              decoration: const InputDecoration(labelText: "Account Type"),
+            ),
+            const SizedBox(height: 16),
+            TextFormField(
+              initialValue: balance.toString(),
+              onChanged: (val) => balance = double.tryParse(val) ?? 0,
+              keyboardType: TextInputType.number,
+              decoration: const InputDecoration(labelText: "Current Balance"),
+              style: const TextStyle(color: Colors.white),
+            ),
+            const SizedBox(height: 32),
+            SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton(
+                onPressed: () async {
+                  if (name.isNotEmpty) {
+                    await DatabaseHelper.instance.updateAccount({
+                      'id': account['id'],
+                      'family_id': account['family_id'],
+                      'name': name,
+                      'type': type,
+                      'balance': balance,
+                    });
+                    Navigator.pop(context);
+                    _loadAccounts();
+                  }
+                },
+                child: const Text("Save Changes"),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -134,9 +200,11 @@ class _AccountsScreenState extends State<AccountsScreen> {
   Widget _buildAccountCard(Map<String, dynamic> acc) {
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      child: GlassCard(
-        padding: const EdgeInsets.all(20),
-        child: Row(
+      child: InkWell(
+        onTap: () => _showEditAccountDialog(acc),
+        child: GlassCard(
+          padding: const EdgeInsets.all(20),
+          child: Row(
           children: [
             Container(
               padding: const EdgeInsets.all(12),
@@ -165,6 +233,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
             ),
           ],
         ),
+      ),
       ),
     );
   }
