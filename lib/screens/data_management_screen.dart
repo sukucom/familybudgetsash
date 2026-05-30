@@ -84,7 +84,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: SashTheme.backgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -111,10 +111,10 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
               _importData,
             ),
             const Spacer(),
-            const Text(
+            Text(
               "Note: A backup contains all your accounts, categories, and transactions. Restoring a backup completely replaces your current records.",
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white24, fontSize: 12),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24), fontSize: 12),
             ),
             const SizedBox(height: 20),
           ],
@@ -137,7 +137,7 @@ class _DataManagementScreenState extends State<DataManagementScreen> {
             ],
           ),
           const SizedBox(height: 12),
-          Text(description, style: const TextStyle(color: Colors.white60, fontSize: 14)),
+          Text(description, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14)),
           const SizedBox(height: 24),
           SizedBox(
             width: double.infinity,

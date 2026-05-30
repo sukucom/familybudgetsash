@@ -99,13 +99,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text("Welcome back,", style: TextStyle(color: Colors.white60, fontSize: 14)),
+            Text("Welcome back,", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14)),
             Text(_familyName, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
           ],
         ),
-        const CircleAvatar(
+        CircleAvatar(
           backgroundColor: SashTheme.primary,
-          child: Icon(Icons.person, color: Colors.white),
+          child: Icon(Icons.person, color: Theme.of(context).colorScheme.onSurface),
         ),
       ],
     );
@@ -117,7 +117,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text("TOTAL BALANCE", style: TextStyle(color: Colors.white38, fontSize: 12, letterSpacing: 2)),
+          Text("TOTAL BALANCE", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 12, letterSpacing: 2)),
           const SizedBox(height: 8),
           Text("₹${_totalBalance.toStringAsFixed(2)}", 
             style: const TextStyle(fontSize: 36, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
@@ -142,7 +142,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             Container(width: 8, height: 8, decoration: BoxDecoration(color: color, shape: BoxShape.circle)),
             const SizedBox(width: 8),
-            Text(label, style: const TextStyle(color: Colors.white38, fontSize: 12)),
+            Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 12)),
           ],
         ),
         const SizedBox(height: 4),
@@ -184,7 +184,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text("₹${spent.toStringAsFixed(0)} / ₹${limit.toStringAsFixed(0)}", 
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: isOverBudget ? SashTheme.error : Colors.white,
+                        color: isOverBudget ? SashTheme.error : Theme.of(context).colorScheme.onSurface,
                       )),
                   ],
                 ),
@@ -193,7 +193,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   borderRadius: BorderRadius.circular(4),
                   child: LinearProgressIndicator(
                     value: percentage,
-                    backgroundColor: Colors.white10,
+                    backgroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                     valueColor: AlwaysStoppedAnimation<Color>(progressColor),
                     minHeight: 8,
                   ),
@@ -208,9 +208,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _buildTransactionList() {
     if (_recentTransactions.isEmpty) {
-      return const Center(child: Padding(
-        padding: EdgeInsets.all(40.0),
-        child: Text("No transactions yet. Tap + to start!", style: TextStyle(color: Colors.white24)),
+      return Center(child: Padding(
+        padding: const EdgeInsets.all(40.0),
+        child: Text("No transactions yet. Tap + to start!", style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24))),
       ));
     }
     return Column(
@@ -240,7 +240,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
+                  color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Text(t['category_icon'] ?? "💰", style: const TextStyle(fontSize: 20)),
@@ -251,7 +251,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(t['category_name'] ?? "Unknown", style: const TextStyle(fontWeight: FontWeight.bold)),
-                    Text(t['account_name'] ?? "Cash", style: const TextStyle(color: Colors.white38, fontSize: 12)),
+                    Text(t['account_name'] ?? "Cash", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 12)),
                   ],
                 ),
               ),

@@ -13,12 +13,19 @@ class SashTheme {
   static const Color backgroundLight = Color(0xFFF8FAFC);
   static const Color surfaceLight = Colors.white;
 
-  // Dark Theme
   static ThemeData get darkTheme {
     return ThemeData(
       brightness: Brightness.dark,
       primaryColor: primary,
       scaffoldBackgroundColor: backgroundDark,
+      colorScheme: const ColorScheme.dark(
+        primary: primary,
+        secondary: accent,
+        error: error,
+        surface: surfaceDark,
+        onSurface: Colors.white,
+        onSurfaceVariant: Colors.white60,
+      ),
       cardTheme: CardThemeData(
         color: surfaceDark,
         elevation: 0,
@@ -26,20 +33,9 @@ class SashTheme {
       ),
       textTheme: GoogleFonts.outfitTextTheme(
         const TextTheme(
-          displayLarge: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-          ),
-          headlineMedium: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white70,
-          ),
-          bodyLarge: TextStyle(
-            fontSize: 16,
-            color: Colors.white,
-          ),
+          displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+          headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Colors.white70),
+          bodyLarge: TextStyle(fontSize: 16, color: Colors.white),
         ),
       ).copyWith(
         bodyLarge: GoogleFonts.inter(textStyle: const TextStyle(fontSize: 16, color: Colors.white)),
@@ -49,15 +45,27 @@ class SashTheme {
         backgroundColor: primary,
         foregroundColor: Colors.white,
       ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: backgroundDark,
+        selectedItemColor: primary,
+        unselectedItemColor: Colors.white24,
+      ),
     );
   }
 
-  // Light Theme
   static ThemeData get lightTheme {
     return ThemeData(
       brightness: Brightness.light,
       primaryColor: primary,
       scaffoldBackgroundColor: backgroundLight,
+      colorScheme: const ColorScheme.light(
+        primary: primary,
+        secondary: accent,
+        error: error,
+        surface: surfaceLight,
+        onSurface: Color(0xFF1E293B),
+        onSurfaceVariant: Color(0xFF475569),
+      ),
       cardTheme: CardThemeData(
         color: surfaceLight,
         elevation: 4,
@@ -66,24 +74,18 @@ class SashTheme {
       ),
       textTheme: GoogleFonts.outfitTextTheme(
         const TextTheme(
-          displayLarge: TextStyle(
-            fontSize: 32,
-            fontWeight: FontWeight.bold,
-            color: Color(0xFF0F172A),
-          ),
-          headlineMedium: TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Color(0xFF475569),
-          ),
-          bodyLarge: TextStyle(
-            fontSize: 16,
-            color: Color(0xFF1E293B),
-          ),
+          displayLarge: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFF0F172A)),
+          headlineMedium: TextStyle(fontSize: 20, fontWeight: FontWeight.w600, color: Color(0xFF475569)),
+          bodyLarge: TextStyle(fontSize: 16, color: Color(0xFF1E293B)),
         ),
       ).copyWith(
         bodyLarge: GoogleFonts.inter(textStyle: const TextStyle(fontSize: 16, color: Color(0xFF1E293B))),
         bodyMedium: GoogleFonts.inter(textStyle: const TextStyle(fontSize: 14, color: Color(0xFF475569))),
+      ),
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: surfaceLight,
+        selectedItemColor: primary,
+        unselectedItemColor: Color(0xFF94A3B8), // slate-400
       ),
     );
   }

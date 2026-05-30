@@ -39,8 +39,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => GlassCard(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Container(
         margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -54,14 +55,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
               controller: TextEditingController(text: name),
               onChanged: (val) => name = val,
               decoration: const InputDecoration(labelText: "Category Name (e.g. Health)"),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 16),
             TextField(
               controller: TextEditingController(text: icon),
               onChanged: (val) => icon = val,
               decoration: const InputDecoration(labelText: "Icon (Emoji)"),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 16),
             if (type == "Expense")
@@ -70,12 +71,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                 onChanged: (val) => budgetLimit = double.tryParse(val) ?? 0.0,
                 keyboardType: TextInputType.number,
                 decoration: const InputDecoration(labelText: "Monthly Budget Limit (₹)", hintText: "0.00 for no limit"),
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
               ),
             if (type == "Expense") const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: type,
-              dropdownColor: SashTheme.backgroundDark,
+              dropdownColor: Theme.of(context).scaffoldBackgroundColor,
               onChanged: (val) => type = val!,
               items: ["Expense", "Income"].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
               decoration: const InputDecoration(labelText: "Category Type"),
@@ -119,7 +120,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
     final filteredCategories = _categories.where((c) => c.type == _filterType).toList();
 
     return Scaffold(
-      backgroundColor: SashTheme.backgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -164,8 +165,8 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
       selected: isSelected,
       onSelected: (val) => setState(() => _filterType = label),
       selectedColor: SashTheme.primary,
-      backgroundColor: Colors.white10,
-      labelStyle: TextStyle(color: isSelected ? Colors.white : Colors.white38),
+      backgroundColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
+      labelStyle: TextStyle(color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     );
   }
@@ -186,13 +187,13 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   Text(cat.name, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                   if (cat.type == 'Expense' && cat.budgetLimit > 0)
                     Text("Budget: ₹${cat.budgetLimit.toStringAsFixed(0)}", 
-                      style: const TextStyle(fontSize: 12, color: Colors.white60)),
+                      style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant)),
                 ],
               ),
             ),
             IconButton(
               onPressed: () => _showAddOrEditCategoryDialog(cat),
-              icon: const Icon(Icons.edit_outlined, color: Colors.white24, size: 20),
+              icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24), size: 20),
             ),
             IconButton(
               onPressed: () async {
@@ -201,7 +202,7 @@ class _CategoriesScreenState extends State<CategoriesScreen> {
                   _loadCategories();
                 }
               },
-              icon: const Icon(Icons.delete_outline, color: Colors.white24, size: 20),
+              icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24), size: 20),
             ),
           ],
         ),

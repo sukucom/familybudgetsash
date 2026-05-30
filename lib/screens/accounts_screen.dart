@@ -36,8 +36,9 @@ class _AccountsScreenState extends State<AccountsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => GlassCard(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Container(
         margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -49,12 +50,12 @@ class _AccountsScreenState extends State<AccountsScreen> {
             TextField(
               onChanged: (val) => name = val,
               decoration: const InputDecoration(labelText: "Account Name (e.g. HDFC Bank)"),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: type,
-              dropdownColor: SashTheme.backgroundDark,
+              dropdownColor: Theme.of(context).scaffoldBackgroundColor,
               onChanged: (val) => type = val!,
               items: ["Bank", "Wallet", "Credit Card"].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
               decoration: const InputDecoration(labelText: "Account Type"),
@@ -64,7 +65,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
               onChanged: (val) => balance = double.tryParse(val) ?? 0,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: "Initial Balance"),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 32),
             SizedBox(
@@ -99,8 +100,9 @@ class _AccountsScreenState extends State<AccountsScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => GlassCard(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Container(
         margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -113,12 +115,12 @@ class _AccountsScreenState extends State<AccountsScreen> {
               initialValue: name,
               onChanged: (val) => name = val,
               decoration: const InputDecoration(labelText: "Account Name (e.g. HDFC Bank)"),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: type,
-              dropdownColor: SashTheme.backgroundDark,
+              dropdownColor: Theme.of(context).scaffoldBackgroundColor,
               onChanged: (val) => type = val!,
               items: ["Bank", "Wallet", "Credit Card"].map((t) => DropdownMenuItem(value: t, child: Text(t))).toList(),
               decoration: const InputDecoration(labelText: "Account Type"),
@@ -129,7 +131,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
               onChanged: (val) => balance = double.tryParse(val) ?? 0,
               keyboardType: TextInputType.number,
               decoration: const InputDecoration(labelText: "Current Balance"),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 32),
             SizedBox(
@@ -174,11 +176,11 @@ class _AccountsScreenState extends State<AccountsScreen> {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  const Column(
+                  Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text("Accounts", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
-                      Text("Manage your money sources", style: TextStyle(color: Colors.white60)),
+                      const Text("Accounts", style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
+                      Text("Manage your money sources", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                     ],
                   ),
                   IconButton(
@@ -223,7 +225,7 @@ class _AccountsScreenState extends State<AccountsScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(acc['name'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                  Text(acc['type'], style: const TextStyle(fontSize: 12, color: Colors.white38)),
+                  Text(acc['type'], style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5))),
                 ],
               ),
             ),

@@ -40,8 +40,9 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => GlassCard(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Container(
         margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -53,12 +54,12 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
             TextField(
               onChanged: (val) => name = val,
               decoration: const InputDecoration(labelText: "Member Name"),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 16),
             DropdownButtonFormField<String>(
               value: role,
-              dropdownColor: SashTheme.backgroundDark,
+              dropdownColor: Theme.of(context).scaffoldBackgroundColor,
               onChanged: (val) => role = val!,
               items: ["Admin", "Member", "Child", "Partner"].map((r) => DropdownMenuItem(value: r, child: Text(r))).toList(),
               decoration: const InputDecoration(labelText: "Role"),
@@ -94,8 +95,9 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (context) => GlassCard(
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      builder: (context) => Container(
         margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
         padding: const EdgeInsets.all(24),
         child: Column(
@@ -108,7 +110,7 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
               controller: TextEditingController(text: name),
               onChanged: (val) => name = val,
               decoration: const InputDecoration(labelText: "Family Name"),
-              style: const TextStyle(color: Colors.white),
+              style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
             ),
             const SizedBox(height: 32),
             SizedBox(
@@ -136,7 +138,7 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
-      backgroundColor: SashTheme.backgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -189,13 +191,13 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
               children: [
                 Text(_family?['name'] ?? "Sash Family", 
                   style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
-                const Text("Main Household", style: TextStyle(color: Colors.white60, fontSize: 14)),
+                Text("Main Household", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14)),
               ],
             ),
           ),
           IconButton(
             onPressed: _showEditFamilyDialog,
-            icon: const Icon(Icons.edit_outlined, color: Colors.white24),
+            icon: Icon(Icons.edit_outlined, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24)),
           ),
         ],
       ),
@@ -220,7 +222,7 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(member['name'], style: const TextStyle(fontWeight: FontWeight.bold)),
-                  Text(member['role'], style: const TextStyle(fontSize: 12, color: Colors.white38)),
+                  Text(member['role'], style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5))),
                 ],
               ),
             ),
@@ -230,7 +232,7 @@ class _FamilySetupScreenState extends State<FamilySetupScreen> {
                   await DatabaseHelper.instance.deleteMember(member['id']);
                   _loadFamilyData();
                 },
-                icon: const Icon(Icons.remove_circle_outline, color: Colors.white10, size: 20),
+                icon: Icon(Icons.remove_circle_outline, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1), size: 20),
               ),
           ],
         ),

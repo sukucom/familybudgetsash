@@ -127,7 +127,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
-      backgroundColor: SashTheme.backgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -141,9 +141,9 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
                 showDialog(
                   context: context,
                   builder: (context) => AlertDialog(
-                    backgroundColor: SashTheme.surfaceDark,
-                    title: const Text("Delete Transaction?", style: TextStyle(color: Colors.white)),
-                    content: const Text("This will revert the account balance changes.", style: TextStyle(color: Colors.white70)),
+                    backgroundColor: Theme.of(context).colorScheme.surface,
+                    title: Text("Delete Transaction?", style: TextStyle(color: Theme.of(context).colorScheme.onSurface)),
+                    content: Text("This will revert the account balance changes.", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                     actions: [
                       TextButton(onPressed: () => Navigator.pop(context), child: const Text("Cancel")),
                       TextButton(
@@ -188,7 +188,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
   Widget _buildAmountDisplay() {
     return Column(
       children: [
-        const Text("AMOUNT", style: TextStyle(color: Colors.white38, fontSize: 12, letterSpacing: 2)),
+        Text("AMOUNT", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 12, letterSpacing: 2)),
         const SizedBox(height: 8),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -197,7 +197,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           children: [
             Text("₹", style: TextStyle(color: _isDebit ? SashTheme.error : SashTheme.accent, fontSize: 32, fontWeight: FontWeight.bold)),
             const SizedBox(width: 8),
-            Text(_amount, style: const TextStyle(color: Colors.white, fontSize: 64, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
+            Text(_amount, style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 64, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
           ],
         ),
       ],
@@ -217,22 +217,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? SashTheme.primary : Colors.white10,
+                color: isSelected ? SashTheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSelected ? SashTheme.primary : Colors.white24),
+                border: Border.all(color: isSelected ? SashTheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.24)),
               ),
               child: Row(
                 children: [
                   Icon(
                     acc['type'] == 'Wallet' ? Icons.payments : Icons.account_balance,
                     size: 16,
-                    color: isSelected ? Colors.white : Colors.white60,
+                    color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     acc['name'],
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white60,
+                      color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
@@ -260,22 +260,22 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
               decoration: BoxDecoration(
-                color: isSelected ? SashTheme.accent.withOpacity(0.2) : Colors.white10,
+                color: isSelected ? SashTheme.accent.withOpacity(0.2) : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSelected ? SashTheme.accent : Colors.white24),
+                border: Border.all(color: isSelected ? SashTheme.accent : Theme.of(context).colorScheme.onSurface.withOpacity(0.24)),
               ),
               child: Row(
                 children: [
                   Icon(
                     Icons.person,
                     size: 16,
-                    color: isSelected ? SashTheme.accent : Colors.white60,
+                    color: isSelected ? SashTheme.accent : Theme.of(context).colorScheme.onSurfaceVariant,
                   ),
                   const SizedBox(width: 8),
                   Text(
                     mem['name'],
                     style: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white60,
+                      color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                     ),
                   ),
@@ -293,7 +293,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       margin: const EdgeInsets.symmetric(horizontal: 20),
       padding: const EdgeInsets.all(6),
       decoration: BoxDecoration(
-        color: Colors.white10,
+        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
@@ -320,7 +320,7 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Center(
-          child: Text(label, style: TextStyle(color: isActive ? Colors.white : Colors.white38, fontWeight: FontWeight.bold)),
+          child: Text(label, style: TextStyle(color: isActive ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontWeight: FontWeight.bold)),
         ),
       ),
     );
@@ -344,11 +344,11 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 16),
               decoration: BoxDecoration(
-                color: isSelected ? SashTheme.surfaceDark : Colors.transparent,
+                color: isSelected ? Theme.of(context).colorScheme.surface : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: isSelected ? SashTheme.primary : Colors.white10),
+                border: Border.all(color: isSelected ? SashTheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
               ),
-              child: Center(child: Text("${cat.icon} ${cat.name}", style: TextStyle(color: isSelected ? Colors.white : Colors.white38))),
+              child: Center(child: Text("${cat.icon} ${cat.name}", style: TextStyle(color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5)))),
             ),
           );
         },
@@ -361,13 +361,13 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: TextField(
         controller: _noteController,
-        style: const TextStyle(color: Colors.white, fontSize: 14),
+        style: TextStyle(color: Theme.of(context).colorScheme.onSurface, fontSize: 14),
         decoration: InputDecoration(
           hintText: "Add a note...",
-          hintStyle: const TextStyle(color: Colors.white10),
-          prefixIcon: const Icon(Icons.notes, color: Colors.white10, size: 20),
+          hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+          prefixIcon: Icon(Icons.notes, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1), size: 20),
           filled: true,
-          fillColor: Colors.white.withOpacity(0.05),
+          fillColor: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
           border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
         ),
       ),

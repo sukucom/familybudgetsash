@@ -76,7 +76,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: SashTheme.backgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       body: Stack(
         children: [
           PageView(
@@ -123,7 +123,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
               shape: BoxShape.circle,
             ),
             child: Image.asset('assets/images/app_icon.png', height: 120),
@@ -135,10 +135,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: TextStyle(fontSize: 32, fontWeight: FontWeight.bold, fontFamily: 'Outfit'),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             "Track. Save. Grow Together.\nLet's get your household set up in seconds.",
             textAlign: TextAlign.center,
-            style: TextStyle(color: Colors.white38, fontSize: 16),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 16),
           ),
         ],
       ),
@@ -163,7 +163,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           const SizedBox(height: 32),
           Text(title, style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
           const SizedBox(height: 8),
-          Text(subtitle, style: const TextStyle(color: Colors.white38, fontSize: 16)),
+          Text(subtitle, style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5), fontSize: 16)),
           const SizedBox(height: 40),
           TextField(
             controller: controller,
@@ -171,8 +171,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             decoration: InputDecoration(
               hintText: hint,
-              hintStyle: const TextStyle(color: Colors.white10),
-              enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: Colors.white10)),
+              hintStyle: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1)),
+              enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1))),
               focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: SashTheme.primary)),
             ),
           ),
@@ -196,7 +196,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             onPressed: _nextPage,
             style: ElevatedButton.styleFrom(
               backgroundColor: SashTheme.primary,
-              foregroundColor: Colors.white,
+              foregroundColor: Theme.of(context).colorScheme.onSurface,
               padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             ),
@@ -213,7 +213,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       height: 8,
       width: _currentPage == index ? 24 : 8,
       decoration: BoxDecoration(
-        color: _currentPage == index ? SashTheme.primary : Colors.white10,
+        color: _currentPage == index ? SashTheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
         borderRadius: BorderRadius.circular(4),
       ),
     );

@@ -105,11 +105,11 @@ class _ReportsScreenState extends State<ReportsScreen> {
               margin: const EdgeInsets.only(right: 12),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: isSelected ? SashTheme.primary : Colors.white10,
+                color: isSelected ? SashTheme.primary : Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Text(tf, style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white38,
+                color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               )),
             ),
@@ -123,7 +123,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.05),
+        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -146,12 +146,12 @@ class _ReportsScreenState extends State<ReportsScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 8),
           decoration: BoxDecoration(
-            color: isSelected ? Colors.white10 : Colors.transparent,
+            color: isSelected ? Theme.of(context).colorScheme.onSurface.withOpacity(0.1) : Colors.transparent,
             borderRadius: BorderRadius.circular(8),
           ),
           child: Center(
             child: Text(label, style: TextStyle(
-              color: isSelected ? Colors.white : Colors.white38,
+              color: isSelected ? Theme.of(context).colorScheme.onSurface : Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5),
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
             )),
           ),
@@ -168,7 +168,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           children: [
             const Text("📊", style: TextStyle(fontSize: 48)),
             const SizedBox(height: 16),
-            Text("No data for $_selectedTimeframe", style: const TextStyle(color: Colors.white24)),
+            Text("No data for $_selectedTimeframe", style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24))),
           ],
         ),
       );
@@ -204,7 +204,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(_selectedType == 'Debit' ? "Spent" : "Earned", style: const TextStyle(color: Colors.white60, fontSize: 14)),
+              Text(_selectedType == 'Debit' ? "Spent" : "Earned", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14)),
               Text("₹${_totalAmount.toStringAsFixed(0)}", 
                 style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, fontFamily: 'Outfit')),
             ],
@@ -260,7 +260,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: SashTheme.surfaceDark,
+              color: Theme.of(context).colorScheme.surface,
               borderRadius: BorderRadius.circular(12),
             ),
             child: Text(icon, style: const TextStyle(fontSize: 20)),
@@ -271,7 +271,7 @@ class _ReportsScreenState extends State<ReportsScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, style: const TextStyle(fontWeight: FontWeight.bold)),
-                Text(percentage, style: const TextStyle(fontSize: 12, color: Colors.white38)),
+                Text(percentage, style: TextStyle(fontSize: 12, color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5))),
               ],
             ),
           ),

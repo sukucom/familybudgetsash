@@ -98,12 +98,12 @@ class _KeyButton extends StatelessWidget {
         decoration: BoxDecoration(
           color: isAction 
               ? Theme.of(context).primaryColor 
-              : (isSpecial ? Colors.white10 : Colors.transparent),
+              : (isSpecial ? Theme.of(context).colorScheme.onSurface.withOpacity(0.1) : Colors.transparent),
           borderRadius: BorderRadius.circular(16),
         ),
         alignment: Alignment.center,
         child: icon != null
-            ? Icon(icon, color: Colors.white, size: 28)
+            ? Icon(icon, color: Theme.of(context).colorScheme.onSurface, size: 28)
             : Text(
                 label,
                 style: const TextStyle(

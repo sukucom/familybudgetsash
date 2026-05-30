@@ -57,12 +57,12 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Theme.of(context).colorScheme.surface,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) => StatefulBuilder(
         builder: (context, setModalState) {
-          return GlassCard(
-            margin: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
-            padding: const EdgeInsets.all(24),
+          return Padding(
+            padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom, left: 24, right: 24, top: 24),
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -74,12 +74,12 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                     onChanged: (val) => amount = val,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(labelText: "Amount (₹)"),
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: type,
-                    dropdownColor: SashTheme.backgroundDark,
+                    dropdownColor: Theme.of(context).scaffoldBackgroundColor,
                     onChanged: (val) {
                       setModalState(() {
                         type = val!;
@@ -92,7 +92,7 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
                     value: selectedCategoryId,
-                    dropdownColor: SashTheme.backgroundDark,
+                    dropdownColor: Theme.of(context).scaffoldBackgroundColor,
                     onChanged: (val) => selectedCategoryId = val,
                     items: categories.where((c) => c.type == type).map((c) => DropdownMenuItem<int>(value: c.id, child: Text("${c.icon} ${c.name}"))).toList(),
                     decoration: const InputDecoration(labelText: "Category"),
@@ -100,7 +100,7 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: frequency,
-                    dropdownColor: SashTheme.backgroundDark,
+                    dropdownColor: Theme.of(context).scaffoldBackgroundColor,
                     onChanged: (val) => frequency = val!,
                     items: ["Daily", "Weekly", "Monthly", "Yearly"].map((f) => DropdownMenuItem(value: f, child: Text(f))).toList(),
                     decoration: const InputDecoration(labelText: "Frequency"),
@@ -108,7 +108,7 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                   const SizedBox(height: 16),
                   DropdownButtonFormField<int>(
                     value: selectedAccountId,
-                    dropdownColor: SashTheme.backgroundDark,
+                    dropdownColor: Theme.of(context).scaffoldBackgroundColor,
                     onChanged: (val) => selectedAccountId = val!,
                     items: accounts.map((a) => DropdownMenuItem<int>(value: a['id'], child: Text(a['name']))).toList(),
                     decoration: const InputDecoration(labelText: "Charge To Account"),
@@ -116,7 +116,7 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                   const SizedBox(height: 16),
                   Row(
                     children: [
-                      const Text("Next Billing Date: ", style: TextStyle(color: Colors.white60)),
+                      Text("Next Billing Date: ", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                       TextButton(
                         onPressed: () async {
                           final date = await showDatePicker(
@@ -137,7 +137,7 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                   TextField(
                     onChanged: (val) => note = val,
                     decoration: const InputDecoration(labelText: "Note (Optional)"),
-                    style: const TextStyle(color: Colors.white),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface),
                   ),
                   const SizedBox(height: 32),
                   SizedBox(
@@ -177,7 +177,7 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
     if (_isLoading) return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
     return Scaffold(
-      backgroundColor: SashTheme.backgroundDark,
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -191,7 +191,7 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
         ],
       ),
       body: _recurringList.isEmpty
-          ? const Center(child: Text("No recurring bills set up.", style: TextStyle(color: Colors.white38)))
+          ? Center(child: Text("No recurring bills set up.", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant.withOpacity(0.5))))
           : ListView.builder(
               padding: const EdgeInsets.all(20),
               itemCount: _recurringList.length,
@@ -209,7 +209,7 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white10,
+                            color: Theme.of(context).colorScheme.onSurface.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           child: Text(r['category_icon'] ?? "📦", style: const TextStyle(fontSize: 24)),
@@ -220,7 +220,7 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(r['category_name'] ?? "Unknown", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                              Text("${r['frequency']} • Next: ${DateFormat('MMM dd').format(nextDate)}", style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                              Text("${r['frequency']} • Next: ${DateFormat('MMM dd').format(nextDate)}", style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 12)),
                             ],
                           ),
                         ),
@@ -238,7 +238,7 @@ class _RecurringTransactionsScreenState extends State<RecurringTransactionsScree
                             IconButton(
                               constraints: const BoxConstraints(),
                               padding: EdgeInsets.zero,
-                              icon: const Icon(Icons.delete_outline, color: Colors.white24, size: 20),
+                              icon: Icon(Icons.delete_outline, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.24), size: 20),
                               onPressed: () async {
                                 await DatabaseHelper.instance.deleteRecurringTransaction(r['id']);
                                 _loadData();
