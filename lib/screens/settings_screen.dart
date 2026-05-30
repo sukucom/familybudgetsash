@@ -4,6 +4,7 @@ import '../widgets/glass_card.dart';
 import 'categories_screen.dart';
 import 'family_setup_screen.dart';
 import 'data_management_screen.dart';
+import 'recurring_transactions_screen.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -35,6 +36,12 @@ class SettingsScreen extends StatelessWidget {
                 "Manage members and permissions", 
                 Icons.people_outline,
                 onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const FamilySetupScreen())),
+              ),
+              _buildSettingsItem(
+                "Manage Subscriptions", 
+                "Set up recurring bills and incomes", 
+                Icons.event_repeat_outlined,
+                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const RecurringTransactionsScreen())),
               ),
               
               const SizedBox(height: 24),

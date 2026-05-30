@@ -21,7 +21,7 @@ class DatabaseHelper {
 
     return await openDatabase(
       path,
-      version: 2,
+      version: 3,
       onCreate: _createDB,
       onUpgrade: _upgradeDB,
     );
@@ -30,6 +30,24 @@ class DatabaseHelper {
   Future _upgradeDB(Database db, int oldVersion, int newVersion) async {
     if (oldVersion < 2) {
       await db.execute('ALTER TABLE categories ADD COLUMN budget_limit REAL DEFAULT 0.0');
+    }
+    if (oldVersion < 3) {
+      await db.execute('''
+        CREATE TABLE recurring_transactions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          account_id INTEGER NOT NULL,
+          member_id INTEGER NOT NULL,
+          category_id INTEGER NOT NULL,
+          amount REAL NOT NULL,
+          type TEXT NOT NULL,
+          note TEXT,
+          frequency TEXT NOT NULL,
+          next_date TEXT NOT NULL,
+          FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE,
+          FOREIGN KEY (member_id) REFERENCES members (id) ON DELETE CASCADE,
+          FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
+        )
+      ''');
     }
   }
 
@@ -90,6 +108,23 @@ class DatabaseHelper {
         date $textType,
         note $nullableTextType,
         type $textType,
+        FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE,
+        FOREIGN KEY (member_id) REFERENCES members (id) ON DELETE CASCADE,
+        FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
+      )
+    ''');
+
+    await db.execute('''
+      CREATE TABLE recurring_transactions (
+        id $idType,
+        account_id $integerType,
+        member_id $integerType,
+        category_id $integerType,
+        amount $floatType,
+        type $textType,
+        note $nullableTextType,
+        frequency $textType,
+        next_date $textType,
         FOREIGN KEY (account_id) REFERENCES accounts (id) ON DELETE CASCADE,
         FOREIGN KEY (member_id) REFERENCES members (id) ON DELETE CASCADE,
         FOREIGN KEY (category_id) REFERENCES categories (id) ON DELETE SET NULL
@@ -375,15 +410,14 @@ class DatabaseHelper {
     final Map<String, dynamic> backup = jsonDecode(jsonStr);
 
     await db.transaction((txn) async {
-      // Clear existing
+      await txn.delete('recurring_transactions');
       await txn.delete('transactions');
       await txn.delete('categories');
       await txn.delete('accounts');
       await txn.delete('members');
       await txn.delete('families');
 
-      // Insert new
-      for (var table in ['families', 'members', 'accounts', 'categories', 'transactions']) {
+      for (var table in ['families', 'members', 'accounts', 'categories', 'transactions', 'recurring_transactions']) {
         if (backup[table] != null) {
           for (var item in backup[table]) {
             await txn.insert(table, item);
@@ -391,6 +425,88 @@ class DatabaseHelper {
         }
       }
     });
+  }
+
+  // --- Recurring Transactions ---
+  Future<List<Map<String, dynamic>>> getRecurringTransactions() async {
+    final db = await instance.database;
+    return await db.rawQuery('''
+      SELECT r.*, c.name as category_name, c.icon as category_icon, a.name as account_name 
+      FROM recurring_transactions r 
+      JOIN categories c ON r.category_id = c.id 
+      JOIN accounts a ON r.account_id = a.id
+      ORDER BY r.next_date ASC
+    ''');
+  }
+
+  Future<int> insertRecurringTransaction(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.insert('recurring_transactions', row);
+  }
+
+  Future<int> updateRecurringTransaction(Map<String, dynamic> row) async {
+    final db = await instance.database;
+    return await db.update('recurring_transactions', row, where: 'id = ?', whereArgs: [row['id']]);
+  }
+
+  Future<int> deleteRecurringTransaction(int id) async {
+    final db = await instance.database;
+    return await db.delete('recurring_transactions', where: 'id = ?', whereArgs: [id]);
+  }
+
+  Future<void> processRecurringTransactions() async {
+    final db = await instance.database;
+    final now = DateTime.now();
+    final todayStr = DateTime(now.year, now.month, now.day).toIso8601String();
+
+    final dueTransactions = await db.query('recurring_transactions', 
+      where: 'next_date <= ?', 
+      whereArgs: [todayStr]
+    );
+
+    if (dueTransactions.isEmpty) return;
+
+    await db.transaction((txn) async {
+      for (var r in dueTransactions) {
+        // 1. Insert standard transaction
+        await txn.insert('transactions', {
+          'account_id': r['account_id'],
+          'member_id': r['member_id'],
+          'category_id': r['category_id'],
+          'amount': r['amount'],
+          'date': r['next_date'], // Use the date it was due
+          'note': '${r['note'] ?? ''} (Auto-generated)'.trim(),
+          'type': r['type'],
+        });
+
+        // 2. Update Account Balance
+        final accountResult = await txn.query('accounts', where: 'id = ?', whereArgs: [r['account_id']]);
+        if (accountResult.isNotEmpty) {
+          double currentBalance = (accountResult.first['balance'] as num).toDouble();
+          double amount = (r['amount'] as num).toDouble();
+          double newBalance = r['type'] == 'Credit' ? currentBalance + amount : currentBalance - amount;
+          await txn.update('accounts', {'balance': newBalance}, where: 'id = ?', whereArgs: [r['account_id']]);
+        }
+
+        // 3. Calculate next date
+        DateTime currentDate = DateTime.parse(r['next_date'] as String);
+        DateTime nextDate;
+        String freq = r['frequency'] as String;
+        
+        if (freq == 'Daily') nextDate = currentDate.add(const Duration(days: 1));
+        else if (freq == 'Weekly') nextDate = currentDate.add(const Duration(days: 7));
+        else if (freq == 'Monthly') nextDate = DateTime(currentDate.year, currentDate.month + 1, currentDate.day);
+        else if (freq == 'Yearly') nextDate = DateTime(currentDate.year + 1, currentDate.month, currentDate.day);
+        else nextDate = currentDate.add(const Duration(days: 30)); // fallback
+
+        // 4. Update recurring record
+        await txn.update('recurring_transactions', {'next_date': nextDate.toIso8601String()}, 
+          where: 'id = ?', whereArgs: [r['id']]);
+      }
+    });
+
+    // Run again recursively in case some are multiple months behind
+    await processRecurringTransactions();
   }
 
   Future close() async {

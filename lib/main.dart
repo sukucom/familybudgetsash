@@ -12,8 +12,11 @@ import 'database/database_helper.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Database
+  // Initialize Database & Automation
   await DatabaseHelper.instance.database;
+  DatabaseHelper.instance.processRecurringTransactions().catchError((e) {
+    debugPrint("Error processing recurring transactions: $e");
+  });
   
   // Check Onboarding Status
   final prefs = await SharedPreferences.getInstance();
