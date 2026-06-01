@@ -162,23 +162,34 @@ class _AddTransactionScreenState extends State<AddTransactionScreen> {
       ),
       body: Column(
         children: [
-          const Spacer(),
-          _buildAmountDisplay(),
-          const SizedBox(height: 24),
-          _buildAccountSelector(),
-          const SizedBox(height: 16),
-          _buildMemberSelector(),
-          const SizedBox(height: 16),
-          _buildTypeToggle(),
-          const SizedBox(height: 16),
-          _buildCategoryChips(),
-          const SizedBox(height: 24),
-          _buildNoteField(),
-          const SizedBox(height: 32),
-          SashKeypad(
-            onKeyPressed: _onKeyPress,
-            onDelete: _onDelete,
-            onDone: _saveTransaction,
+          Expanded(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  const SizedBox(height: 32),
+                  _buildAmountDisplay(),
+                  const SizedBox(height: 24),
+                  _buildAccountSelector(),
+                  const SizedBox(height: 16),
+                  _buildMemberSelector(),
+                  const SizedBox(height: 16),
+                  _buildTypeToggle(),
+                  const SizedBox(height: 16),
+                  _buildCategoryChips(),
+                  const SizedBox(height: 24),
+                  _buildNoteField(),
+                  const SizedBox(height: 16),
+                ],
+              ),
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: SashKeypad(
+              onKeyPressed: _onKeyPress,
+              onDelete: _onDelete,
+              onDone: _saveTransaction,
+            ),
           ),
         ],
       ),
